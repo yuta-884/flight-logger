@@ -1,6 +1,8 @@
-# flight-logger 要件・仕様書（v0.4 ドラフト）
+# flight-logger 要件・仕様書（v0.5 ドラフト）
 
-v0.3からの変更: AeroDataBox利用規約の本文を確認（§10）。**取得データの永続保存（DB化）と公開表示が規約で禁止**されており、現行の「API解決結果をDBに保存し公開プロフィールで表示する」設計と正面から衝突する。データ提供元と保存モデルの再設計が必要（§10.2に選択肢）。
+v0.4からの変更: データ提供元と保存モデルを**Option A（AeroDataBox＋事実のみ保存）に確定**。他プロバイダ比較（§10.3）の結果、履歴照会を無料で提供できるのはAeroDataBoxのみ（FlightAwareは履歴が$100/月、AviationStackは履歴有料、AmadeusはLCC非対応）。AeroDataBoxのレスポンスは登録時の検証・補完にのみ使い**永続保存しない**。DBに持つのは事実フィールド（便名・日付・区間・航空会社・公表スケジュール）＋OpenFlightsローカル計算値のみ。**AeroDataBox独自の運航データ（実時刻・機体番号・ゲート/ターミナル）は保存も表示もしない**。飛行時間は公表スケジュールからの**予定ブロックタイム**で算出（本プロダクトは遅延追跡ではなく搭乗記録であり、実測飛行時間は要件外）。
+
+v0.3からの変更: AeroDataBox利用規約の本文を確認（§10）。**取得データの永続保存（DB化）と公開表示が規約で禁止**されており、当初の「API解決結果をDBに保存し公開プロフィールで表示する」設計と正面から衝突する。データ提供元と保存モデルの再設計が必要（§10.2に選択肢）。
 
 v0.2からの変更: フロント構成を**Vite + React + TypeScript**に確定（SPA、SSRなし）。
 
@@ -68,12 +70,13 @@ create table flights (
   origin_iata text not null, destination_iata text not null,
   diverted_to_iata text,
   canceled boolean not null default false,
-  scheduled_departure text, scheduled_arrival text,  -- TZなしローカル（flight-logと同じ扱い）
+  scheduled_departure text, scheduled_arrival text,  -- TZなしローカルの公表スケジュール（事実）。飛行時間算出に使用
   distance_km integer,                -- 登録時にHaversineで計算
   layover boolean,                    -- null=自動判定 / true / false 手動上書き
   source text not null,               -- 'api' | 'manual' | 'flighty_import'
   flighty_id text,                    -- Flightyインポートの重複防止キー
-  ops jsonb,                          -- 運航データ（ターミナル・ゲート・機材・実時刻）
+  -- 注: opsカラムは持たない。AeroDataBox独自の運航データ（実時刻・機体番号・
+  --     ゲート/ターミナル）は規約(§10)により保存しない。飛行時間は予定スケジュールから算出
   created_at timestamptz not null default now(),
   unique (user_id, flighty_id),
   unique (user_id, flight_date, flight_number)
@@ -98,7 +101,7 @@ create table api_lookups (
 | 機能 | 内容 |
 |---|---|
 | 認証 | Supabase AuthのOAuthログイン。プロバイダは未確定（§9）。初回ログイン時にslugを設定 |
-| フライト登録（API） | 便名＋出発日を入力 → Edge Functionが解決してINSERT。複数区間が返る場合は候補を提示して選択（flight-logの `--from` 相当をUI化）。出発ローカル日付フィルタ等の正規化ロジックはflight-log `add_flight.js` を移植 |
+| フライト登録（API） | 便名＋出発日を入力 → Edge FunctionがAeroDataBoxで解決 → **事実フィールドのみ**（区間・航空会社・公表スケジュール）を抽出してINSERT。レスポンス（特に運航データ）は保存しない。複数区間が返る場合は候補を提示して選択。正規化ロジックはflight-log `add_flight.js` を移植 |
 | フライト登録（手入力） | 便名・出発/到着空港・日付を直接入力。API消費ゼロ |
 | Flighty CSVインポート | クライアント側でパース（`import_flighty.js` 移植）→ 一括INSERT。API消費ゼロ。`flighty_id` で冪等 |
 | 一覧・編集・削除 | 自分のフライトの一覧表示、`layover` 上書き・削除。シングルユーザー版の「JSON直編集」に代わるUIとして必須 |
@@ -145,9 +148,10 @@ create table api_lookups (
 
 ## 9. 未確定事項（実装前に決める）
 
-1. **データ提供元と保存モデル**（§10の結論を受けて最優先で決定）: 現行のAeroDataBox+DB保存設計は規約違反の懸念が強い。§10.2の選択肢から決める
-2. **slugの仕様**: 文字種・変更可否・予約語（admin等）
-3. **既存flight-log（個人版）との関係**: 併存か、自分のデータをflight-loggerに移行して一本化するか
+1. **slugの仕様**: 文字種・変更可否・予約語（admin等）
+2. **既存flight-log（個人版）との関係**: 併存か、自分のデータをflight-loggerに移行して一本化するか
+
+（解決済み: データ提供元と保存モデル → Option A確定、§10）
 
 ## 10. AeroDataBox利用規約の確認結果（2026-07-13）
 
