@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
-import { getAirport, getAirlineByIata, haversineKm, parseFlightNumber } from '../lib/masters';
+import { getAirport, getAirlineByIata, parseFlightNumber } from '../lib/masters';
+import { insertFlight } from '../lib/flights';
 
 // 手入力でのフライト登録（API非使用）。便名・出発日・出発/到着空港を入力。
 // 航空会社名はマスタから解決、距離はHaversineで計算して保存する
@@ -23,24 +23,20 @@ export function FlightForm({ onAdded }: { onAdded: () => void }) {
 
     const originIata = origin.trim().toUpperCase();
     const destIata = destination.trim().toUpperCase();
-    const o = getAirport(originIata);
-    const d = getAirport(destIata);
-    if (!o) return setError(`出発空港 ${originIata} がマスタに見つかりません（IATA 3レター）`);
-    if (!d) return setError(`到着空港 ${destIata} がマスタに見つかりません（IATA 3レター）`);
+    if (!getAirport(originIata)) return setError(`出発空港 ${originIata} がマスタに見つかりません（IATA 3レター）`);
+    if (!getAirport(destIata)) return setError(`到着空港 ${destIata} がマスタに見つかりません（IATA 3レター）`);
     if (!flightDate) return setError('出発日を入力してください');
 
     const airline = getAirlineByIata(parsed.code);
 
     setBusy(true);
-    const { error } = await supabase.from('flights').insert({
-      user_id: session!.user.id,
+    const { error } = await insertFlight(session!.user.id, {
       flight_number: parsed.normalized,
       flight_date: flightDate,
       airline_code: parsed.code,
       airline_name: airline?.name ?? null,
       origin_iata: originIata,
       destination_iata: destIata,
-      distance_km: haversineKm(o, d),
       source: 'manual',
     });
     setBusy(false);
@@ -54,8 +50,7 @@ export function FlightForm({ onAdded }: { onAdded: () => void }) {
   }
 
   return (
-    <form className="card" onSubmit={submit} style={{ marginBottom: '1.5rem' }}>
-      <h2 style={{ marginTop: 0 }}>フライトを追加</h2>
+    <form onSubmit={submit}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="field">
           <label htmlFor="fn">便名</label>

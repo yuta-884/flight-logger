@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { loadMasters } from '../lib/masters';
 import type { Flight } from '../lib/types';
-import { FlightForm } from '../components/FlightForm';
+import { AddFlight } from '../components/AddFlight';
 import { FlightList } from '../components/FlightList';
 
 export function Flights() {
@@ -39,7 +39,7 @@ export function Flights() {
       </header>
 
       {mastersReady ? (
-        <FlightForm onAdded={load} />
+        <AddFlight onAdded={load} />
       ) : (
         <p className="muted">マスタ読み込み中…</p>
       )}
