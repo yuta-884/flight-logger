@@ -28,8 +28,8 @@
 | Phase | 内容 | 状態 |
 |---|---|---|
 | 1 | Supabase＋Google認証＋プロフィール（slug）＋flights＋RLS＋手入力CRUD | **完了** |
-| 2 | Edge Function `resolve-flight`（AeroDataBox解決＋クォータ） | 未着手 |
-| 3 | Flighty CSVインポート（クライアント処理） | 未着手 |
+| 2 | Edge Function `resolve-flight`（AeroDataBox解決＋クォータ） | **完了** |
+| 3 | Flighty CSVインポート（クライアント処理） | 実装中 |
 | 4 | 統計＋地球儀（flight-logから移植） | 未着手 |
 | 5 | 公開プロフィール `/u/{slug}` ＋埋め込みカード | 未着手 |
 

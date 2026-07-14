@@ -21,6 +21,7 @@ export interface Airline {
 
 let airportsByIata: Map<string, Airport> | null = null;
 let airlinesByIata: Map<string, Airline> | null = null;
+let airlinesByIcao: Map<string, Airline> | null = null;
 
 async function loadJson<T>(path: string): Promise<T> {
   const res = await fetch(path);
@@ -37,8 +38,10 @@ export async function loadMasters(): Promise<void> {
   ]);
   airportsByIata = new Map(airports.map((a) => [a.iata, a]));
   airlinesByIata = new Map();
+  airlinesByIcao = new Map();
   for (const a of airlines) {
     if (a.iata && !airlinesByIata.has(a.iata)) airlinesByIata.set(a.iata, a);
+    if (a.icao && !airlinesByIcao.has(a.icao)) airlinesByIcao.set(a.icao, a);
   }
 }
 
@@ -48,6 +51,11 @@ export function getAirport(iata: string): Airport | undefined {
 
 export function getAirlineByIata(iata: string): Airline | undefined {
   return airlinesByIata?.get(iata.toUpperCase());
+}
+
+// Flightyインポートは航空会社をICAOコードで持つため、ICAO→IATA・名称の解決に使う
+export function getAirlineByIcao(icao: string): Airline | undefined {
+  return airlinesByIcao?.get(icao.toUpperCase());
 }
 
 const EARTH_RADIUS_KM = 6371;
