@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../auth/AuthProvider';
 import { loadMasters } from '../lib/masters';
 import type { Flight } from '../lib/types';
+import { AppHeader } from '../components/AppHeader';
 import { AddFlight } from '../components/AddFlight';
 import { ImportFlighty } from '../components/ImportFlighty';
 import { FlightList } from '../components/FlightList';
 
 export function Flights() {
-  const { profile, signOut } = useAuth();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(true);
   const [mastersReady, setMastersReady] = useState(false);
@@ -32,12 +31,7 @@ export function Flights() {
 
   return (
     <div className="container">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem' }}>
-        <h1 className="brand">✈ FLIGHT LOGGER</h1>
-        <div className="muted" style={{ fontSize: '0.85rem' }}>
-          {profile?.slug} · <button className="ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={signOut}>ログアウト</button>
-        </div>
-      </header>
+      <AppHeader />
 
       {mastersReady ? (
         <>

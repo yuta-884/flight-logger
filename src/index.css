@@ -142,3 +142,117 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+
+/* ── ナビ ── */
+.navlink {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+}
+.navlink.active {
+  color: var(--fg);
+  border-bottom: 2px solid var(--accent2);
+  padding-bottom: 2px;
+}
+
+/* ── 統計カード（flight-logから移植） ── */
+.cards {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.1rem;
+}
+.cards.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+.cards.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 44rem) {
+  .cards.two,
+  .cards.three {
+    grid-template-columns: 1fr;
+  }
+}
+.card h2 {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin: 0 0 0.6rem;
+}
+.big {
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.unit {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.pair {
+  display: flex;
+  gap: 2rem;
+}
+.pair .label {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.conversions {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 0.2rem 2rem;
+}
+.flags {
+  margin-top: 0.9rem;
+  font-size: 1.9rem;
+  line-height: 1.45;
+  letter-spacing: 0.15em;
+}
+.flags .transit {
+  opacity: 0.35;
+}
+.legend {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.4rem;
+}
+
+/* ── 地球儀 ── */
+#globe-card {
+  margin-top: 1.1rem;
+  padding: 0;
+  overflow: hidden;
+}
+#globe {
+  height: 30rem;
+  cursor: grab;
+}
+#globe:active {
+  cursor: grabbing;
+}
+@media (max-width: 44rem) {
+  #globe {
+    height: 22rem;
+  }
+}
+#globe .scene-tooltip {
+  color: var(--accent2);
+  background: var(--card);
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.5rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
