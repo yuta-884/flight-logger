@@ -1,0 +1,60 @@
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import type { Flight } from '../lib/types';
+
+// 自分のフライト一覧。行ごとに削除できる（シングルユーザー版のJSON直編集に代わるUI）
+export function FlightList({ flights, onChanged }: { flights: Flight[]; onChanged: () => void }) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function remove(id: string) {
+    if (!confirm('このフライトを削除しますか？')) return;
+    setDeletingId(id);
+    const { error } = await supabase.from('flights').delete().eq('id', id);
+    setDeletingId(null);
+    if (error) {
+      alert(`削除に失敗しました: ${error.message}`);
+      return;
+    }
+    onChanged();
+  }
+
+  if (flights.length === 0) {
+    return <p className="muted">まだフライトがありません。上のフォームから追加してください。</p>;
+  }
+
+  return (
+    <div className="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Flight</th>
+            <th>Route</th>
+            <th>km</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {flights.map((f) => (
+            <tr key={f.id}>
+              <td>{f.flight_date}</td>
+              <td>
+                <strong>{f.flight_number}</strong>
+              </td>
+              <td>
+                {f.origin_iata} → {f.diverted_to_iata ?? f.destination_iata}
+                {f.canceled && <span className="muted"> (canceled)</span>}
+              </td>
+              <td>{f.distance_km?.toLocaleString('en-US') ?? '—'}</td>
+              <td style={{ textAlign: 'right' }}>
+                <button className="danger" onClick={() => remove(f.id)} disabled={deletingId === f.id}>
+                  {deletingId === f.id ? '…' : '削除'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
