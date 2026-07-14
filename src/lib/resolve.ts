@@ -37,19 +37,10 @@ export async function resolveFlight(flightNumber: string, flightDate: string, fr
     body: { flight_number: flightNumber, flight_date: flightDate, ...(from ? { from } : {}) },
   });
 
-  if (error) {
-    // FunctionsHttpError の場合、レスポンスbodyにサーバーのerrorコードが入る
-    const ctx = (error as { context?: Response }).context;
-    if (ctx && typeof ctx.json === 'function') {
-      try {
-        const body = await ctx.json();
-        throw new ResolveFailure((body?.error as ResolveError) ?? 'unknown');
-      } catch (e) {
-        if (e instanceof ResolveFailure) throw e;
-      }
-    }
-    throw new ResolveFailure('unknown');
-  }
+  // Edge Functionはアプリレベルの結果を 200 + { error } で返すので、まず data.error を見る。
+  // error（非200: 認証失敗・サーバー異常など）はネットワーク/認証エラーとして扱う。
+  if (error) throw new ResolveFailure('unknown');
+  if (data?.error) throw new ResolveFailure(data.error as ResolveError);
   return (data?.candidates as Candidate[]) ?? [];
 }
 
@@ -63,7 +54,7 @@ export function resolveErrorMessage(code: ResolveError): string {
     case 'quota_global':
       return '全体のAPI利用枠が一時的に上限です。時間をおくか、手入力で登録してください。';
     case 'not_found':
-      return 'この便名・日付では見つかりませんでした。日付を確認するか、手入力で登録してください。';
+      return 'フライトが見つかりませんでした。日付を確認するか、手入力で登録してください。';
     case 'invalid_flight_number':
       return '便名の形式が正しくありません（例: ZG51）。';
     case 'invalid_flight_date':
