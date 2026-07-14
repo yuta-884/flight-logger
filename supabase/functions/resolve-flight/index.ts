@@ -118,8 +118,16 @@ Deno.serve(async (req) => {
   if (res.status === 404) return appError('not_found');
   if (!res.ok) return appError('upstream_error');
 
-  let legs: any = await res.json();
-  if (!Array.isArray(legs)) legs = [legs];
+  // 該当便がないと空ボディや非JSONが返ることがある。パース失敗＝該当便なし扱い（500にしない）
+  let legs: any;
+  try {
+    const text = await res.text();
+    legs = text ? JSON.parse(text) : [];
+  } catch {
+    return appError('not_found');
+  }
+  if (legs && !Array.isArray(legs)) legs = [legs];
+  if (!Array.isArray(legs)) legs = [];
   legs = legs.filter((l: any) => l?.departure?.airport?.iata && l?.arrival?.airport?.iata);
 
   // 出発ローカル日付が一致する区間に絞る（深夜便で前日発が混ざる問題への対処）
