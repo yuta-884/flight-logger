@@ -15,6 +15,9 @@ export function AppHeader() {
           <NavLink to="/stats" className={({ isActive }) => (isActive ? 'navlink active' : 'navlink')}>
             Stats
           </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => (isActive ? 'navlink active' : 'navlink')}>
+            Settings
+          </NavLink>
         </nav>
       </div>
       <div className="muted" style={{ fontSize: '0.85rem' }}>

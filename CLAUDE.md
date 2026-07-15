@@ -30,8 +30,8 @@
 | 1 | Supabase＋Google認証＋プロフィール（slug）＋flights＋RLS＋手入力CRUD | **完了** |
 | 2 | Edge Function `resolve-flight`（AeroDataBox解決＋クォータ） | **完了** |
 | 3 | Flighty CSVインポート（クライアント処理） | **完了** |
-| 4 | 統計＋地球儀（flight-logから移植） | 実装中 |
-| 5 | 公開プロフィール `/u/{slug}` ＋埋め込みカード | 未着手 |
+| 4 | 統計＋地球儀（flight-logから移植） | **完了** |
+| 5 | 公開プロフィール `/u/{slug}` ＋埋め込みカード | 実装中 |
 
 ## クォータ（§6、Phase 2で実装）
 

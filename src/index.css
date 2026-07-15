@@ -26,6 +26,12 @@ body {
   min-height: 100vh;
 }
 
+/* 埋め込みカード表示時はページ背景を透過（iframeで外部サイトに馴染ませる） */
+body.embed-body {
+  background: transparent;
+  background-image: none;
+}
+
 a {
   color: var(--accent);
 }
