@@ -93,6 +93,7 @@ function drawMap(canvas: HTMLCanvasElement, headWidth: number, geo: any, globe: 
 export function EmbedCard() {
   const { slug = '' } = useParams();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
@@ -107,7 +108,10 @@ export function EmbedCard() {
     loadPublicStats(slug)
       .then((res) => {
         if (!res) setNotFound(true);
-        else setStats(res.stats);
+        else {
+          setStats(res.stats);
+          setDisplayName(res.profile.display_name);
+        }
       })
       .catch(() => setNotFound(true));
   }, [slug]);
@@ -187,7 +191,7 @@ export function EmbedCard() {
       <div className="ecard">
         <div className="ehead" ref={headRef}>
           <h1>MY FLIGHT LOG</h1>
-          <div className="tagline">Personal Flight Stats</div>
+          <div className="tagline">{displayName ?? slug}'s Flight Stats</div>
         </div>
         <canvas ref={canvasRef} />
         <div className="eflags">
@@ -211,7 +215,7 @@ export function EmbedCard() {
           <div className="estat"><div className="k">Airlines</div><div className="v">{stats.airlines.count}</div></div>
         </div>
         <div className="mrz">
-          <div className="line"><span>{`ALLTIME<<<<SINCE${since}<<${stats.total_flights}FLIGHTS`}</span><span className="fill">{FILL}</span></div>
+          <div className="line"><span>{`ALLTIME<<<<SINCE${since}<<${stats.total_flights}FLIGHTS`}</span><span className="fill">{FILL}</span><span>{slug.toUpperCase()}</span></div>
           <div className="line"><span>{`ISSUED${issued}${home}`}</span><span className="fill">{FILL}</span><span>FLIGHT-LOG</span></div>
         </div>
       </div>
