@@ -56,15 +56,32 @@ export function Settings() {
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ marginTop: 0 }}>公開設定</h2>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
           <div>
-            <div style={{ fontWeight: 600 }}>プロフィールを公開する</div>
+            <div style={{ fontWeight: 600 }}>
+              プロフィールを公開する
+              <span
+                style={{
+                  marginLeft: '0.6rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: profile.is_public ? 'var(--accent2)' : 'var(--muted)',
+                }}
+              >
+                {profile.is_public ? '● 公開中' : '○ 非公開'}
+              </span>
+            </div>
             <div className="muted" style={{ fontSize: '0.85rem' }}>
-              ONにすると、誰でも下記URLであなたの統計・地球儀を閲覧できます。
+              公開にすると、誰でも下記URLであなたの統計・地球儀を閲覧できます。
             </div>
           </div>
-          <button className={profile.is_public ? '' : 'ghost'} onClick={togglePublic} disabled={busy}>
-            {profile.is_public ? '公開中' : '非公開'}
+          <button
+            className={profile.is_public ? 'ghost' : ''}
+            onClick={togglePublic}
+            disabled={busy}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {profile.is_public ? '非公開にする' : '公開する'}
           </button>
         </div>
       </div>
