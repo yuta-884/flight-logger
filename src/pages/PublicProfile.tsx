@@ -26,7 +26,7 @@ export function PublicProfile() {
   return (
     <div className="container">
       <header style={{ marginBottom: '1.5rem' }}>
-        <h1 className="brand" style={{ fontSize: '1.3rem' }}>✈ FLIGHT LOGGER</h1>
+        <h1 className="brand" style={{ fontSize: '1.3rem', width: 'fit-content' }}>✈ FLIGHT LOGGER</h1>
         <div className="muted" style={{ fontSize: '0.8rem' }}>{displayName ?? slug} · {slug}</div>
       </header>
 

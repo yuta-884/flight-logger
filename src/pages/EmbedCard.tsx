@@ -190,7 +190,7 @@ export function EmbedCard() {
       <style>{css}</style>
       <div className="ecard">
         <div className="ehead" ref={headRef}>
-          <h1>FLIGHT LOGGER</h1>
+          <h1>✈ FLIGHT LOGGER</h1>
           <div className="tagline">{displayName ?? slug}'s Flight Stats</div>
         </div>
         <canvas ref={canvasRef} />
