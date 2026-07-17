@@ -4,3 +4,6 @@
 .env.local
 dist
 node_modules
+
+# Supabase CLI
+supabase/.temp/
