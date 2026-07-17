@@ -30,7 +30,7 @@ export function Onboarding() {
     });
     if (error) {
       // 一意制約違反（slug重複）を分かりやすく案内
-      setError(error.code === '23505' ? 'このslugは既に使われています' : error.message);
+      setError(error.code === '23505' ? 'このユーザーIDは既に使われています' : error.message);
       setBusy(false);
       return;
     }
@@ -42,12 +42,12 @@ export function Onboarding() {
     <div className="container">
       <h1 className="brand">✈ FLIGHT LOGGER</h1>
       <form className="card" onSubmit={submit} style={{ marginTop: '1.5rem', maxWidth: '30rem' }}>
-        <h2>公開URLを決める</h2>
+        <h2>ユーザーIDを決める</h2>
         <p className="muted">
-          あなたの公開プロフィールのURL（<code>/u/&lt;slug&gt;</code>）に使う識別子です。あとから変更できます。
+          あなたの公開プロフィールのURL（<code>/u/ユーザーID</code>）に使われます。あとから変更できます。
         </p>
         <div className="field">
-          <label htmlFor="slug">slug</label>
+          <label htmlFor="slug">ユーザーID</label>
           <input
             id="slug"
             value={slug}

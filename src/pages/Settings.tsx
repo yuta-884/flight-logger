@@ -35,7 +35,7 @@ export function Settings() {
     setBusy(true);
     const { error } = await supabase.from('profiles').update({ slug: check.slug }).eq('id', profile!.id);
     setBusy(false);
-    if (error) return setSlugError(error.code === '23505' ? 'このslugは既に使われています' : error.message);
+    if (error) return setSlugError(error.code === '23505' ? 'このユーザーIDは既に使われています' : error.message);
     await refreshProfile();
     setSaved(true);
   }
@@ -87,9 +87,9 @@ export function Settings() {
       </div>
 
       <form className="card" onSubmit={saveSlug} style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ marginTop: 0 }}>公開URL（slug）</h2>
+        <h2 style={{ marginTop: 0 }}>ユーザーID（公開URL）</h2>
         <div className="field">
-          <label htmlFor="slug">slug</label>
+          <label htmlFor="slug">ユーザーID</label>
           <input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} autoComplete="off" />
         </div>
         {slugError && <p className="error">{slugError}</p>}
@@ -98,7 +98,7 @@ export function Settings() {
           変更すると旧URL（<code>/u/{profile.slug}</code>）は無効になり、共有リンクが切れます。
         </p>
         <button type="submit" disabled={busy || slug === profile.slug || slug.length < 3}>
-          slugを保存
+          ユーザーIDを保存
         </button>
       </form>
 
