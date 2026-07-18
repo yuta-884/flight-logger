@@ -6,10 +6,10 @@ import type { Flight } from '../lib/types';
 export function FlightList({ flights, onChanged }: { flights: Flight[]; onChanged: () => void }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // 到着地での滞在の扱い: null=自動判定（同一空港・24h以内の接続は乗継）/ false=滞在 / true=乗継
-  async function setLayover(id: string, raw: string) {
-    const layover = raw === 'auto' ? null : raw === 'true';
-    const { error } = await supabase.from('flights').update({ layover }).eq('id', id);
+  // チェック=到着地に滞在した（layover=falseで上書き）/ 未チェック=自動判定（null。24h以内の同一空港接続は乗継扱い）
+  // layover=true（強制乗継）はUIからは設定しない（自動判定で乗継になるため実用上不要）
+  async function setStay(id: string, stay: boolean) {
+    const { error } = await supabase.from('flights').update({ layover: stay ? false : null }).eq('id', id);
     if (error) {
       alert(`更新に失敗しました: ${error.message}`);
       return;
@@ -42,7 +42,7 @@ export function FlightList({ flights, onChanged }: { flights: Flight[]; onChange
             <th>Flight</th>
             <th>Route</th>
             <th>km</th>
-            <th>到着地の滞在</th>
+            <th title="チェックすると到着地を「滞在した国」として数えます（乗り継ぎ時間が長く入国した場合など）。未チェックは自動判定">滞在</th>
             <th></th>
           </tr>
         </thead>
@@ -58,18 +58,14 @@ export function FlightList({ flights, onChanged }: { flights: Flight[]; onChange
                 {f.canceled && <span className="muted"> (canceled)</span>}
               </td>
               <td>{f.distance_km?.toLocaleString('en-US') ?? '—'}</td>
-              <td>
-                <select
-                  aria-label="到着地の滞在の扱い"
-                  title="国カウントで到着地を「滞在した国」に含めるかの手動指定。自動=24時間以内の乗り継ぎは滞在に数えない"
-                  value={f.layover === null ? 'auto' : String(f.layover)}
-                  onChange={(e) => setLayover(f.id, e.target.value)}
-                  style={{ fontSize: '0.85rem', padding: '0.25rem 0.4rem' }}
-                >
-                  <option value="auto">自動</option>
-                  <option value="false">滞在</option>
-                  <option value="true">乗継</option>
-                </select>
+              <td style={{ textAlign: 'center' }}>
+                <input
+                  type="checkbox"
+                  aria-label="到着地に滞在した（国カウントに含める）"
+                  title="チェックすると到着地を「滞在した国」として数えます。未チェックは自動判定（24時間以内の乗り継ぎは滞在に数えない）"
+                  checked={f.layover === false}
+                  onChange={(e) => setStay(f.id, e.target.checked)}
+                />
               </td>
               <td style={{ textAlign: 'right' }}>
                 <button className="danger" onClick={() => remove(f.id)} disabled={deletingId === f.id}>
