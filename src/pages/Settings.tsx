@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { validateSlug } from '../lib/slug';
@@ -11,6 +11,8 @@ export function Settings() {
   const [slugError, setSlugError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | undefined>(undefined);
 
   const origin = window.location.origin;
   const publicUrl = `${origin}/u/${profile?.slug}`;
@@ -43,6 +45,9 @@ export function Settings() {
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.clearTimeout(copiedTimer.current);
+      copiedTimer.current = window.setTimeout(() => setCopied(false), 2000);
     } catch {
       /* クリップボード不可時は無視 */
     }
@@ -89,8 +94,13 @@ export function Settings() {
       <form className="card" onSubmit={saveSlug} style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ marginTop: 0 }}>ユーザーID（公開URL）</h2>
         <div className="field">
-          <label htmlFor="slug">ユーザーID</label>
-          <input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} autoComplete="off" />
+          <input
+            id="slug"
+            aria-label="ユーザーID"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            autoComplete="off"
+          />
         </div>
         {slugError && <p className="error">{slugError}</p>}
         {saved && <p className="muted">保存しました。</p>}
@@ -108,20 +118,42 @@ export function Settings() {
           <div className="field">
             <label>公開ページ</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input readOnly value={publicUrl} onFocus={(e) => e.currentTarget.select()} />
-              <button className="ghost" type="button" onClick={() => copy(publicUrl)}>コピー</button>
+              <input readOnly value={publicUrl} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, minWidth: 0 }} />
+              <button className="ghost" type="button" onClick={() => copy(publicUrl)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>コピー</button>
             </div>
           </div>
           <div className="field">
             <label>埋め込みカード（iframe）</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input readOnly value={iframe} onFocus={(e) => e.currentTarget.select()} />
-              <button className="ghost" type="button" onClick={() => copy(iframe)}>コピー</button>
+              <input readOnly value={iframe} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, minWidth: 0 }} />
+              <button className="ghost" type="button" onClick={() => copy(iframe)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>コピー</button>
             </div>
             <p className="muted" style={{ fontSize: '0.8rem' }}>
               Notion・ブログなどにこのiframeを貼り付けるとカードが表示されます。
             </p>
           </div>
+        </div>
+      )}
+
+      {copied && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            bottom: '1.5rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--card)',
+            border: '1px solid var(--row)',
+            borderRadius: '0.6rem',
+            padding: '0.55rem 1.1rem',
+            fontSize: '0.9rem',
+            boxShadow: '0 6px 20px rgba(0,0,0,.45)',
+            zIndex: 10,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ✓ コピーしました
         </div>
       )}
     </div>
