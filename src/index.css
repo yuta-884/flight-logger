@@ -271,6 +271,60 @@ th {
   grid-template-columns: repeat(2, minmax(0, max-content));
   gap: 0.2rem 2rem;
 }
+
+/* ── 距離の地球一周バー（Distanceカード） ── */
+.distance-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 0.8rem;
+  height: 2.3rem;
+}
+.db-icon {
+  position: absolute;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 1.35rem;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.db-track {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  margin-left: 1.15rem;
+  border-radius: 999px;
+  background: var(--row);
+  overflow: hidden;
+}
+.db-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0.85;
+}
+.db-label {
+  position: absolute;
+  right: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
 .flags {
   margin-top: 0.9rem;
   font-size: 1.9rem;
