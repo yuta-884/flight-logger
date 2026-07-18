@@ -50,7 +50,12 @@ export interface Stats {
 
 type GetAirport = (iata: string) => Airport | undefined;
 
-export function computeStats(allFlights: Flight[], getAirport: GetAirport = defaultGetAirport): Stats {
+export function computeStats(
+  allFlights: Flight[],
+  getAirport: GetAirport = defaultGetAirport,
+  // 手動追加の「行った国」（船・陸路などフライト以外の入国）。滞在扱いで国カウントにマージする
+  extraCountries: { code: string; name: string | null }[] = []
+): Stats {
   const today = new Date().toISOString().slice(0, 10);
   const flights = allFlights
     .filter((f) => !f.canceled && f.flight_date <= today)
@@ -175,6 +180,20 @@ export function computeStats(allFlights: Flight[], getAirport: GetAirport = defa
   };
   const visitsIncl = countryVisits(true);
   const visitsExcl = countryVisits(false);
+
+  // 手動追加の国をマージ。フライト由来で既にある場合は何もしない
+  // （乗継のみの国に手動追加すると「滞在した国」へ昇格する）
+  const byVisits = (a: CountryVisit, b: CountryVisit) =>
+    b.visits - a.visits || a.country_code.localeCompare(b.country_code);
+  for (const c of extraCountries) {
+    for (const list of [visitsIncl, visitsExcl]) {
+      if (!list.some((v) => v.country_code === c.code)) {
+        list.push({ country_code: c.code, country_name: c.name, visits: 1 });
+      }
+    }
+  }
+  visitsIncl.sort(byVisits);
+  visitsExcl.sort(byVisits);
 
   // 地球儀ルート（無向で集約、座標を焼き込み）
   const routeMap = new Map<string, GlobeRoute>();

@@ -99,6 +99,14 @@ create table flights (
 );
 -- index: (user_id, flight_date desc)
 
+-- 手動追加の「行った国」（船・陸路などフライト以外の入国。0002_manual_countries.sql）
+create table manual_countries (
+  user_id uuid not null references profiles(id) on delete cascade,
+  country_code text not null,         -- ISO 3166-1 alpha-2
+  created_at timestamptz not null default now(),
+  primary key (user_id, country_code)
+);
+
 -- API解決の利用ログ（クォータ執行用）
 create table api_lookups (
   id bigint generated always as identity primary key,
@@ -110,8 +118,8 @@ create table api_lookups (
 ```
 
 **RLSポリシー（実装済み）**:
-- `profiles` / `flights`: 所有者（`auth.uid()`）はCRUD可
-- `is_public = true` のユーザーの `profiles` と `flights` は誰でもSELECT可（匿名含む）
+- `profiles` / `flights` / `manual_countries`: 所有者（`auth.uid()`）はCRUD可
+- `is_public = true` のユーザーの `profiles` / `flights` / `manual_countries` は誰でもSELECT可（匿名含む）
 - `api_lookups`: ポリシーを一切付けない＝通常ロールはアクセス不可。Edge Functionのservice roleのみ読み書き（RLSバイパス）
 
 ## 5. 機能要件（すべて実装済み）
@@ -126,7 +134,8 @@ create table api_lookups (
 | 統計・地球儀 | flight-logの統計ページを移植（定義同一）。データ取得先がstats.json→DBに変わるのみ |
 | 公開プロフィール | 公開ONのユーザーのみ `/u/{slug}` で統計＋地球儀を匿名閲覧可。非公開・不存在は同一の「存在しないか非公開」表示 |
 | 埋め込みカード | `/embed/{slug}`。公開ONのユーザーのみ。flight-logのパスポート風カード（canvas 2D世界地図・国旗・MRZ）を移植。iframeで外部サイトに埋め込む想定 |
-| 設定画面 | 公開ON/OFFトグル、ユーザーID変更（旧URL失効の注意表示つき）、公開URL・埋め込みiframeコードのコピー |
+| 設定画面 | 公開ON/OFFトグル、ユーザーID変更（旧URL失効の注意表示つき）、公開URL・埋め込みiframeコードのコピー、行った国の手動追加 |
+| 行った国の手動追加 | 船・陸路などフライト以外で入国した国を設定画面から追加（国一覧は空港マスタから導出）。統計の国カウントに滞在としてマージされ、乗継のみの国に追加すると「滞在した国」へ昇格。公開ページ・埋め込みカードにも反映 |
 
 画面タイトルは全画面「✈ FLIGHT LOGGER」（グラデーション文字）で統一。公開ページのサブタイトルは `{表示名} · {slug}`、埋め込みカードのタグラインは `{表示名}'s Flight Stats`。
 

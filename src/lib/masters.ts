@@ -58,6 +58,36 @@ export function getAirlineByIcao(icao: string): Airline | undefined {
   return airlinesByIcao?.get(icao.toUpperCase());
 }
 
+// 空港マスタから導出した国一覧（手動「行った国」のドロップダウン・国名解決用）
+export interface Country {
+  code: string;
+  name: string | null;
+}
+
+let countryList: Country[] | null = null;
+let countryNames: Map<string, string | null> | null = null;
+
+function buildCountries(): void {
+  if (countryNames) return;
+  countryNames = new Map();
+  for (const a of airportsByIata?.values() ?? []) {
+    if (a.country_code && !countryNames.has(a.country_code)) countryNames.set(a.country_code, a.country_name);
+  }
+  countryList = [...countryNames.entries()]
+    .map(([code, name]) => ({ code, name }))
+    .sort((x, y) => (x.name ?? x.code).localeCompare(y.name ?? y.code));
+}
+
+export function listCountries(): Country[] {
+  buildCountries();
+  return countryList!;
+}
+
+export function getCountryName(code: string): string | null {
+  buildCountries();
+  return countryNames!.get(code.toUpperCase()) ?? null;
+}
+
 const EARTH_RADIUS_KM = 6371;
 
 // 2空港間の大圏距離（Haversine）。登録時に計算して distance_km に保存する

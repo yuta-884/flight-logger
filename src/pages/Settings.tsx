@@ -1,8 +1,13 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { validateSlug } from '../lib/slug';
+import { listCountries, loadMasters, type Country } from '../lib/masters';
+import { loadManualCountries } from '../lib/publicProfile';
 import { AppHeader } from '../components/AppHeader';
+
+// ISO 3166-1 alpha-2 → 絵文字国旗
+const flagOf = (cc: string) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 
 // 公開設定: プロフィールの公開ON/OFF、slug変更、公開URL・埋め込みコードの表示。
 export function Settings() {
@@ -13,6 +18,48 @@ export function Settings() {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | undefined>(undefined);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [manual, setManual] = useState<{ code: string; name: string | null }[]>([]);
+  const [selCountry, setSelCountry] = useState('');
+
+  // 手動「行った国」: マスタから国一覧を用意し、登録済みを読み込む
+  useEffect(() => {
+    if (!profile) return;
+    loadMasters()
+      .then(() => {
+        setCountries(listCountries());
+        return loadManualCountries(profile.id);
+      })
+      .then(setManual)
+      .catch(() => {});
+  }, [profile?.id]);
+
+  async function addCountry() {
+    if (!profile || !selCountry) return;
+    setBusy(true);
+    const { error } = await supabase
+      .from('manual_countries')
+      .insert({ user_id: profile.id, country_code: selCountry });
+    setBusy(false);
+    if (error) {
+      alert(`追加に失敗しました: ${error.message}`);
+      return;
+    }
+    setSelCountry('');
+    setManual(await loadManualCountries(profile.id));
+  }
+
+  async function removeCountry(code: string) {
+    if (!profile) return;
+    setBusy(true);
+    const { error } = await supabase
+      .from('manual_countries')
+      .delete()
+      .eq('user_id', profile.id)
+      .eq('country_code', code);
+    setBusy(false);
+    if (!error) setManual(await loadManualCountries(profile.id));
+  }
 
   const origin = window.location.origin;
   const publicUrl = `${origin}/u/${profile?.slug}`;
@@ -111,6 +158,68 @@ export function Settings() {
           ユーザーIDを保存
         </button>
       </form>
+
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>行った国の追加</h2>
+        <p className="muted" style={{ fontSize: '0.85rem' }}>
+          船や陸路などフライト以外で入国した国を「行った国」に追加できます。統計・公開ページの国数と国旗に反映されます。
+        </p>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <select
+            aria-label="追加する国"
+            value={selCountry}
+            onChange={(e) => setSelCountry(e.target.value)}
+            style={{ flex: 1, minWidth: 0 }}
+          >
+            <option value="">国を選択…</option>
+            {countries
+              .filter((c) => !manual.some((m) => m.code === c.code))
+              .map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name ?? c.code}
+                </option>
+              ))}
+          </select>
+          <button
+            type="button"
+            onClick={addCountry}
+            disabled={!selCountry || busy}
+            style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+          >
+            追加
+          </button>
+        </div>
+        {manual.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.9rem' }}>
+            {manual.map((m) => (
+              <span
+                key={m.code}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'var(--row)',
+                  borderRadius: '999px',
+                  padding: '0.3rem 0.4rem 0.3rem 0.75rem',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {flagOf(m.code)} {m.name ?? m.code}
+                <button
+                  className="ghost"
+                  type="button"
+                  onClick={() => removeCountry(m.code)}
+                  disabled={busy}
+                  aria-label={`${m.name ?? m.code}を削除`}
+                  style={{ padding: '0.05rem 0.4rem', fontSize: '0.75rem' }}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {profile.is_public && (
         <div className="card">

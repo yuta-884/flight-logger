@@ -21,7 +21,7 @@
 - `npm run dev` — 開発サーバー（要 `.env`: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`）
 - `npm run typecheck` — 型チェック
 - `npm run build` — 本番ビルド
-- DBスキーマ: `supabase/migrations/0001_init.sql` を Supabase SQL Editor で実行
+- DBスキーマ: `supabase/migrations/` のSQLを番号順に Supabase SQL Editor で実行
 
 ## フェーズ（仕様§8）
 
