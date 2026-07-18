@@ -78,7 +78,12 @@ export function StatCards({ stats }: { stats: Stats }) {
         </div>
         <div className="flags">
           {stats.countries.including_layovers.visits.map((v) => (
-            <span key={v.country_code} className={visitedExcl.has(v.country_code) ? '' : 'transit'} title={v.country_name ?? v.country_code}>
+            <span
+              key={v.country_code}
+              className={visitedExcl.has(v.country_code) ? '' : 'transit'}
+              data-name={v.country_name ?? v.country_code}
+              aria-label={v.country_name ?? v.country_code}
+            >
               {flagOf(v.country_code)}
             </span>
           ))}

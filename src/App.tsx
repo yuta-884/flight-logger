@@ -13,7 +13,7 @@ const Stats = lazy(() => import('./pages/Stats').then((m) => ({ default: m.Stats
 const PublicProfile = lazy(() => import('./pages/PublicProfile').then((m) => ({ default: m.PublicProfile })));
 const EmbedCard = lazy(() => import('./pages/EmbedCard').then((m) => ({ default: m.EmbedCard })));
 
-const loadingEl = <div className="container"><p className="muted">読み込み中…</p></div>;
+const loadingEl = <div className="container"><p className="muted">Loading…</p></div>;
 
 export function App() {
   if (!isSupabaseConfigured) return <NotConfigured />;

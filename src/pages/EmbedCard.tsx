@@ -174,7 +174,7 @@ export function EmbedCard() {
   `;
 
   if (notFound) {
-    return <div className="container"><p className="muted">このカードは存在しないか、非公開です。</p></div>;
+    return <div className="container"><p className="muted">This card doesn't exist or is private.</p></div>;
   }
   if (!stats) return <div className="embed-root"><style>{css}</style><p className="muted">Loading…</p></div>;
 

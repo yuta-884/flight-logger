@@ -35,9 +35,9 @@ export function Stats() {
       <AppHeader />
       {error && <p className="error">{error}</p>}
       {!stats ? (
-        <p className="muted">集計中…</p>
+        <p className="muted">Loading…</p>
       ) : stats.total_flights === 0 ? (
-        <p className="muted">まだフライトがありません。Log から追加すると統計が表示されます。</p>
+        <p className="muted">No flights yet. Add flights from the Log page to see your stats.</p>
       ) : (
         <>
           <GlobeView globe={stats.globe} />

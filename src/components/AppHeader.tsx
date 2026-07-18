@@ -21,7 +21,7 @@ export function AppHeader() {
         </nav>
       </div>
       <div className="muted" style={{ fontSize: '0.85rem' }}>
-        {profile?.slug} · <button className="ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={signOut}>ログアウト</button>
+        {profile?.slug} · <button className="ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={signOut}>Log out</button>
       </div>
     </header>
   );

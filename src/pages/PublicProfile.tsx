@@ -30,15 +30,15 @@ export function PublicProfile() {
         <div className="muted" style={{ fontSize: '0.8rem' }}>{displayName ?? slug} · {slug}</div>
       </header>
 
-      {state === 'loading' && <p className="muted">読み込み中…</p>}
+      {state === 'loading' && <p className="muted">Loading…</p>}
       {state === 'notfound' && (
         <div className="card">
-          <p>このプロフィールは存在しないか、非公開です。</p>
+          <p>This profile doesn't exist or is private.</p>
         </div>
       )}
       {state === 'ready' && stats && (
         stats.total_flights === 0 ? (
-          <p className="muted">まだフライトがありません。</p>
+          <p className="muted">No flights yet.</p>
         ) : (
           <>
             <GlobeView globe={stats.globe} />
