@@ -1,0 +1,10 @@
+// Cloudflare Workers（静的アセット）設定。Workers BuildsのGit連携でデプロイする。
+// SPAのため未マッチのパスはindex.htmlへフォールバック（/u/{slug} 等の直リンク対応）。
+{
+  "name": "flight-logger",
+  "compatibility_date": "2026-07-18",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
