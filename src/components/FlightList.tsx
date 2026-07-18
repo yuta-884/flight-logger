@@ -42,7 +42,16 @@ export function FlightList({ flights, onChanged }: { flights: Flight[]; onChange
             <th>Flight</th>
             <th>Route</th>
             <th>km</th>
-            <th title="チェックすると到着地を「滞在した国」として数えます（乗り継ぎ時間が長く入国した場合など）。未チェックは自動判定">滞在</th>
+            <th>
+              滞在
+              <span
+                className="help"
+                data-tip="通常は自動判定です（24時間以内の乗り継ぎは滞在に数えない）。乗り継ぎ時間が長く入国した場合など、到着地を「滞在した国」として数えたいフライトにチェックを入れてください。"
+                aria-label="滞在チェックの説明"
+              >
+                ?
+              </span>
+            </th>
             <th></th>
           </tr>
         </thead>

@@ -149,6 +149,59 @@ th {
   letter-spacing: 0.08em;
 }
 
+/* ── ヘルプアイコン（?）: ホバーで説明ツールチップ ── */
+.help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.3rem;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  vertical-align: middle;
+  cursor: help;
+  position: relative;
+}
+.help:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 0.45rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card);
+  border: 1px solid var(--row);
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.7rem;
+  width: max-content;
+  max-width: 17rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.55;
+  text-align: left;
+  white-space: normal;
+  color: var(--fg, inherit);
+  z-index: 6;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* 統計のランキングテーブル（Flights/Airports/Airlines）は余白を詰めて
+   長い航空会社名が1行に収まりやすくする */
+.cards.three .card table {
+  font-size: 0.85rem;
+}
+.cards.three .card th,
+.cards.three .card td {
+  padding: 0.38rem 0.35rem;
+}
+
 /* ── ナビ ── */
 .navlink {
   color: var(--muted);

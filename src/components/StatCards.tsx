@@ -6,9 +6,15 @@ const flagOf = (cc: string) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e
 
 // flight-log の統計ページ構成を移植:
 // 1段目 距離・飛行時間 / 2段目 Flights(年別)・Airports・Airlines / 最下部 行った国
+// 距離の換算基準: 地球一周（赤道円周）/ 月までの平均距離 / 太陽一周（太陽の円周）
+const EARTH_CIRCUMFERENCE_KM = 40075;
+const MOON_DISTANCE_KM = 384400;
+const SUN_CIRCUMFERENCE_KM = 4379000;
+
 export function StatCards({ stats }: { stats: Stats }) {
   const min = stats.flight_time.total_minutes;
   const days = min / 1440;
+  const km = stats.total_distance_km;
   const visitedExcl = new Set(stats.countries.excluding_layovers.visits.map((v) => v.country_code));
   const years = Object.entries(stats.flights_by_year).sort((a, b) => b[0].localeCompare(a[0]));
 
@@ -18,6 +24,11 @@ export function StatCards({ stats }: { stats: Stats }) {
         <div className="card">
           <h2>Distance</h2>
           <div className="big">{fmt(stats.total_distance_km)}<span className="unit"> km</span></div>
+          <div className="conversions">
+            <span>{(km / EARTH_CIRCUMFERENCE_KM).toFixed(1)}x Around Earth</span>
+            <span>{(km / MOON_DISTANCE_KM).toFixed(1)}x To the Moon</span>
+            <span>{(km / SUN_CIRCUMFERENCE_KM).toFixed(2)}x Around the Sun</span>
+          </div>
         </div>
         <div className="card">
           <h2>Flight Time</h2>
