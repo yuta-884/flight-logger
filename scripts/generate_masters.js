@@ -48,6 +48,35 @@ for (const [name, iso] of countryRows) {
   if (name && iso) countryToIso.set(name, iso);
 }
 
+// OpenFlights countries.dat にISOコードが無い国名の補完（旧称・名称差異・地域）。
+// 補完しないと該当国の空港が country_code=null となり、国カウント・国選択から漏れる
+const ISO_FALLBACK = {
+  Burma: 'MM',
+  Brunei: 'BN',
+  'Cape Verde': 'CV',
+  'Congo (Brazzaville)': 'CG',
+  'Congo (Kinshasa)': 'CD',
+  'East Timor': 'TL',
+  'Faroe Islands': 'FO',
+  'Johnston Atoll': 'UM',
+  Kyrgyzstan: 'KG',
+  Macau: 'MO',
+  Micronesia: 'FM',
+  'Midway Islands': 'UM',
+  'Saint Helena': 'SH',
+  'Saint Kitts and Nevis': 'KN',
+  'Saint Lucia': 'LC',
+  'Saint Pierre and Miquelon': 'PM',
+  'Saint Vincent and the Grenadines': 'VC',
+  Swaziland: 'SZ',
+  'Virgin Islands': 'VI',
+  'Wake Island': 'UM',
+  'Wallis and Futuna': 'WF',
+};
+for (const [name, iso] of Object.entries(ISO_FALLBACK)) {
+  if (!countryToIso.has(name)) countryToIso.set(name, iso);
+}
+
 // airports.dat: id, name, city, country, iata, icao, lat, lon, alt, tz_offset, dst, tz, type, source
 const airports = [];
 const seenIata = new Set();
