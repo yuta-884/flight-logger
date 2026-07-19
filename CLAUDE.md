@@ -13,7 +13,7 @@
 - フロント: Vite + React + TypeScript（SPA、SSRなし）
 - バックエンド: Supabase（Auth + Postgres + RLS + Edge Functions）
 - 認証: Google OAuthのみ
-- ホスティング: Cloudflare Workers 静的アセット（本番: https://flight-logger.yuta-884.workers.dev 、mainへのpushで自動デプロイ。設定は `wrangler.jsonc`）
+- ホスティング: Cloudflare Workers 静的アセット（本番: https://flight-logger.nayuta-labs.workers.dev 、mainへのpushで自動デプロイ。設定は `wrangler.jsonc`）
 - マスタ: `public/data/{airports,airlines}.json`（OpenFlights由来、`scripts/generate_masters.js` で再生成）
 
 ## 開発
