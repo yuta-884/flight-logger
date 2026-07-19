@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
-import { useI18n } from '../lib/i18n';
+import { useI18n, type Lang } from '../lib/i18n';
 
 // 共通ヘッダー。ナビ＋slug表示＋言語切替＋ログアウト。
 // ナビ・Log outは全言語で英語のまま（統計・公開ページの表記と統一）
@@ -25,14 +25,15 @@ export function AppHeader() {
       </div>
       <div className="muted" style={{ fontSize: '0.85rem' }}>
         {profile?.slug} ·{' '}
-        <button
-          className="ghost"
-          style={{ padding: '0.3rem 0.6rem' }}
-          onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}
-          aria-label={lang === 'ja' ? 'Switch to English' : '日本語に切り替え'}
+        <select
+          value={lang}
+          onChange={(e) => setLang(e.target.value as Lang)}
+          aria-label="Language"
+          style={{ width: 'auto', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
         >
-          {lang === 'ja' ? 'EN' : '日本語'}
-        </button>{' '}
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>{' '}
         · <button className="ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={signOut}>Log out</button>
       </div>
     </header>
