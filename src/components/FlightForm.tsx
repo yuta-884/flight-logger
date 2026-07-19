@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { useI18n } from '../lib/i18n';
 import { getAirport, getAirlineByIata, parseFlightNumber } from '../lib/masters';
 import { insertFlight } from '../lib/flights';
 
@@ -7,6 +8,7 @@ import { insertFlight } from '../lib/flights';
 // 航空会社名はマスタから解決、距離はHaversineで計算して保存する
 export function FlightForm({ onAdded }: { onAdded: () => void }) {
   const { session } = useAuth();
+  const { t } = useI18n();
   const [flightNumber, setFlightNumber] = useState('');
   const [flightDate, setFlightDate] = useState('');
   const [origin, setOrigin] = useState('');
@@ -19,13 +21,13 @@ export function FlightForm({ onAdded }: { onAdded: () => void }) {
     setError(null);
 
     const parsed = parseFlightNumber(flightNumber);
-    if (!parsed) return setError('便名の形式が正しくありません（例: ZG51）');
+    if (!parsed) return setError(t('errInvalidFlightNo'));
 
     const originIata = origin.trim().toUpperCase();
     const destIata = destination.trim().toUpperCase();
-    if (!getAirport(originIata)) return setError(`出発空港 ${originIata} がマスタに見つかりません（IATA 3レター）`);
-    if (!getAirport(destIata)) return setError(`到着空港 ${destIata} がマスタに見つかりません（IATA 3レター）`);
-    if (!flightDate) return setError('出発日を入力してください');
+    if (!getAirport(originIata)) return setError(t('errOriginNotFound', { iata: originIata }));
+    if (!getAirport(destIata)) return setError(t('errDestNotFound', { iata: destIata }));
+    if (!flightDate) return setError(t('errDateRequired'));
 
     const airline = getAirlineByIata(parsed.code);
 
@@ -53,25 +55,25 @@ export function FlightForm({ onAdded }: { onAdded: () => void }) {
     <form onSubmit={submit}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="field">
-          <label htmlFor="fn">便名</label>
+          <label htmlFor="fn">{t('flightNumber')}</label>
           <input id="fn" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)} placeholder="ZG51" autoComplete="off" />
         </div>
         <div className="field">
-          <label htmlFor="fd">出発日</label>
+          <label htmlFor="fd">{t('departureDate')}</label>
           <input id="fd" type="date" value={flightDate} onChange={(e) => setFlightDate(e.target.value)} />
         </div>
         <div className="field">
-          <label htmlFor="orig">出発空港</label>
+          <label htmlFor="orig">{t('originAirport')}</label>
           <input id="orig" value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="NRT" autoComplete="off" maxLength={3} />
         </div>
         <div className="field">
-          <label htmlFor="dest">到着空港</label>
+          <label htmlFor="dest">{t('destAirport')}</label>
           <input id="dest" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="BKK" autoComplete="off" maxLength={3} />
         </div>
       </div>
       {error && <p className="error">{error}</p>}
       <button type="submit" disabled={busy}>
-        {busy ? '追加中…' : '追加'}
+        {busy ? t('adding') : t('add')}
       </button>
     </form>
   );

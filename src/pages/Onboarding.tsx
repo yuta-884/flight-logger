@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
+import { useI18n } from '../lib/i18n';
 import { validateSlug } from '../lib/slug';
 
 // 初回ログイン後、公開URL用のslugを本人が入力して profiles を作成する
 export function Onboarding() {
   const { session, refreshProfile } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [slug, setSlug] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +20,7 @@ export function Onboarding() {
     e.preventDefault();
     const check = validateSlug(slug);
     if (!check.ok) {
-      setError(check.reason);
+      setError(t(`slugErr_${check.reason}`));
       return;
     }
     setBusy(true);
@@ -30,7 +32,7 @@ export function Onboarding() {
     });
     if (error) {
       // 一意制約違反（slug重複）を分かりやすく案内
-      setError(error.code === '23505' ? 'このユーザーIDは既に使われています' : error.message);
+      setError(error.code === '23505' ? t('userIdTaken') : error.message);
       setBusy(false);
       return;
     }

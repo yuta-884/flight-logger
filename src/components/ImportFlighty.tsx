@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
+import { useI18n } from '../lib/i18n';
 import { parseFlightyCsv, type ParsedFlight } from '../lib/importFlighty';
 
 // Flighty CSVのインポート（クライアント処理・API非使用）。
 // flighty_id と (日付,便名) の両方で既存＆バッチ内の重複を除外し、冪等に取り込む。
 export function ImportFlighty({ onImported }: { onImported: () => void }) {
   const { session } = useAuth();
+  const { t } = useI18n();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number; warnings: string[] } | null>(null);
@@ -62,22 +64,22 @@ export function ImportFlighty({ onImported }: { onImported: () => void }) {
 
   return (
     <div className="card" style={{ marginBottom: '1.5rem' }}>
-      <h2 style={{ marginTop: 0 }}>Flighty CSV をインポート</h2>
+      <h2 style={{ marginTop: 0 }}>{t('importTitle')}</h2>
       <p className="muted" style={{ fontSize: '0.85rem' }}>
-        Flightyの Settings → Account Data → Export Your Flights で書き出したCSVを取り込みます。何度実行しても重複しません。
+        {t('importDesc')}
       </p>
       <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={onFile} disabled={busy} />
-      {busy && <p className="muted">取り込み中…</p>}
+      {busy && <p className="muted">{t('importing')}</p>}
       {error && <p className="error">{error}</p>}
       {result && (
         <div style={{ marginTop: '0.5rem' }}>
           <p>
-            <strong>{result.imported}</strong> 件を取り込みました
-            {result.skipped > 0 && <span className="muted">（重複でスキップ {result.skipped} 件）</span>}
+            <strong>{result.imported}</strong> {t('importedSuffix')}
+            {result.skipped > 0 && <span className="muted">{t('importedSkipped', { n: result.skipped })}</span>}
           </p>
           {result.warnings.length > 0 && (
             <details>
-              <summary className="muted">警告 {result.warnings.length} 件</summary>
+              <summary className="muted">{t('warningsCount', { n: result.warnings.length })}</summary>
               <ul style={{ fontSize: '0.8rem' }}>
                 {result.warnings.slice(0, 30).map((w, i) => (
                   <li key={i} className="muted">{w}</li>

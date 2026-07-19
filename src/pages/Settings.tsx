@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { validateSlug } from '../lib/slug';
+import { useI18n } from '../lib/i18n';
 import { listCountries, loadMasters, type Country } from '../lib/masters';
 import { loadManualCountries } from '../lib/publicProfile';
 import { AppHeader } from '../components/AppHeader';
@@ -12,6 +13,7 @@ const flagOf = (cc: string) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e
 // 公開設定: プロフィールの公開ON/OFF、slug変更、公開URL・埋め込みコードの表示。
 export function Settings() {
   const { profile, refreshProfile } = useAuth();
+  const { t } = useI18n();
   const [slug, setSlug] = useState(profile?.slug ?? '');
   const [slugError, setSlugError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +44,7 @@ export function Settings() {
       .insert({ user_id: profile.id, country_code: selCountry });
     setBusy(false);
     if (error) {
-      alert(`追加に失敗しました: ${error.message}`);
+      alert(t('countryAddFailed', { msg: error.message }));
       return;
     }
     setSelCountry('');
@@ -79,12 +81,12 @@ export function Settings() {
     setSlugError(null);
     setSaved(false);
     const check = validateSlug(slug);
-    if (!check.ok) return setSlugError(check.reason);
+    if (!check.ok) return setSlugError(t(`slugErr_${check.reason}`));
     if (check.slug === profile?.slug) return;
     setBusy(true);
     const { error } = await supabase.from('profiles').update({ slug: check.slug }).eq('id', profile!.id);
     setBusy(false);
-    if (error) return setSlugError(error.code === '23505' ? 'このユーザーIDは既に使われています' : error.message);
+    if (error) return setSlugError(error.code === '23505' ? t('userIdTaken') : error.message);
     await refreshProfile();
     setSaved(true);
   }
@@ -107,11 +109,11 @@ export function Settings() {
       <AppHeader />
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ marginTop: 0 }}>公開設定</h2>
+        <h2 style={{ marginTop: 0 }}>{t('publicCard')}</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
           <div>
             <div style={{ fontWeight: 600 }}>
-              プロフィールを公開する
+              {t('publicToggle')}
               <span
                 style={{
                   marginLeft: '0.6rem',
@@ -120,11 +122,11 @@ export function Settings() {
                   color: profile.is_public ? 'var(--accent2)' : 'var(--muted)',
                 }}
               >
-                {profile.is_public ? '● 公開中' : '○ 非公開'}
+                {profile.is_public ? t('statusPublic') : t('statusPrivate')}
               </span>
             </div>
             <div className="muted" style={{ fontSize: '0.85rem' }}>
-              公開にすると、誰でも下記URLであなたの統計・地球儀を閲覧できます。
+              {t('publicDesc')}
             </div>
           </div>
           <button
@@ -133,45 +135,45 @@ export function Settings() {
             disabled={busy}
             style={{ whiteSpace: 'nowrap' }}
           >
-            {profile.is_public ? '非公開にする' : '公開する'}
+            {profile.is_public ? t('makePrivate') : t('makePublic')}
           </button>
         </div>
       </div>
 
       <form className="card" onSubmit={saveSlug} style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ marginTop: 0 }}>ユーザーID（公開URL）</h2>
+        <h2 style={{ marginTop: 0 }}>{t('userIdCard')}</h2>
         <div className="field">
           <input
             id="slug"
-            aria-label="ユーザーID"
+            aria-label={t('userIdCard')}
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             autoComplete="off"
           />
         </div>
         {slugError && <p className="error">{slugError}</p>}
-        {saved && <p className="muted">保存しました。</p>}
+        {saved && <p className="muted">{t('userIdSaved')}</p>}
         <p className="muted" style={{ fontSize: '0.8rem' }}>
-          変更すると旧URL（<code>/u/{profile.slug}</code>）は無効になり、共有リンクが切れます。
+          {t('userIdWarning', { url: `/u/${profile.slug}` })}
         </p>
         <button type="submit" disabled={busy || slug === profile.slug || slug.length < 3}>
-          ユーザーIDを保存
+          {t('saveUserId')}
         </button>
       </form>
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ marginTop: 0 }}>行った国の追加</h2>
+        <h2 style={{ marginTop: 0 }}>{t('countriesCard')}</h2>
         <p className="muted" style={{ fontSize: '0.85rem' }}>
-          船や陸路などフライト以外で入国した国を「行った国」に追加できます。統計・公開ページの国数と国旗に反映されます。
+          {t('countriesDesc')}
         </p>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <select
-            aria-label="追加する国"
+            aria-label={t('countriesCard')}
             value={selCountry}
             onChange={(e) => setSelCountry(e.target.value)}
             style={{ flex: 1, minWidth: 0 }}
           >
-            <option value="">国を選択…</option>
+            <option value="">{t('selectCountry')}</option>
             {countries
               .filter((c) => !manual.some((m) => m.code === c.code))
               .map((c) => (
@@ -186,7 +188,7 @@ export function Settings() {
             disabled={!selCountry || busy}
             style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
           >
-            追加
+            {t('add')}
           </button>
         </div>
         {manual.length > 0 && (
@@ -210,7 +212,7 @@ export function Settings() {
                   type="button"
                   onClick={() => removeCountry(m.code)}
                   disabled={busy}
-                  aria-label={`${m.name ?? m.code}を削除`}
+                  aria-label={t('removeCountryAria', { name: m.name ?? m.code })}
                   style={{ padding: '0.05rem 0.4rem', fontSize: '0.75rem' }}
                 >
                   ✕
@@ -223,22 +225,22 @@ export function Settings() {
 
       {profile.is_public && (
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>共有</h2>
+          <h2 style={{ marginTop: 0 }}>{t('shareCard')}</h2>
           <div className="field">
-            <label>公開ページ</label>
+            <label>{t('publicPageLabel')}</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input readOnly value={publicUrl} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, minWidth: 0 }} />
-              <button className="ghost" type="button" onClick={() => copy(publicUrl)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>コピー</button>
+              <button className="ghost" type="button" onClick={() => copy(publicUrl)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{t('copy')}</button>
             </div>
           </div>
           <div className="field">
-            <label>埋め込みカード（iframe）</label>
+            <label>{t('embedLabel')}</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input readOnly value={iframe} onFocus={(e) => e.currentTarget.select()} style={{ flex: 1, minWidth: 0 }} />
-              <button className="ghost" type="button" onClick={() => copy(iframe)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>コピー</button>
+              <button className="ghost" type="button" onClick={() => copy(iframe)} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{t('copy')}</button>
             </div>
             <p className="muted" style={{ fontSize: '0.8rem' }}>
-              Notion・ブログなどにこのiframeを貼り付けるとカードが表示されます。
+              {t('iframeHint')}
             </p>
           </div>
         </div>
@@ -262,7 +264,7 @@ export function Settings() {
             whiteSpace: 'nowrap',
           }}
         >
-          ✓ コピーしました
+          {t('copied')}
         </div>
       )}
     </div>

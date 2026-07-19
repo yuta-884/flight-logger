@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { useI18n } from '../lib/i18n';
 import { insertFlight } from '../lib/flights';
-import { resolveFlight, resolveErrorMessage, ResolveFailure, type Candidate } from '../lib/resolve';
+import { resolveFlight, ResolveFailure, type Candidate } from '../lib/resolve';
 
 // 便名＋出発日をAeroDataBox（Edge Function経由）で解決して登録する。
 // 複数区間が返った場合は候補から選ばせる。上限到達・失敗時は手入力を案内する。
 export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFallback: () => void }) {
   const { session } = useAuth();
+  const { t } = useI18n();
   const [flightNumber, setFlightNumber] = useState('');
   const [flightDate, setFlightDate] = useState('');
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
@@ -25,7 +27,7 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
       setCandidates(found);
     } catch (err) {
       const code = err instanceof ResolveFailure ? err.code : 'unknown';
-      setError(resolveErrorMessage(code));
+      setError(t(`resolveErr_${code}`));
       setOfferManual(true); // どのエラーでも手入力への導線を出す
     } finally {
       setBusy(false);
@@ -60,16 +62,16 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
       <form onSubmit={search}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="field">
-            <label htmlFor="r-fn">便名</label>
+            <label htmlFor="r-fn">{t('flightNumber')}</label>
             <input id="r-fn" value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)} placeholder="ZG51" autoComplete="off" />
           </div>
           <div className="field">
-            <label htmlFor="r-fd">出発日</label>
+            <label htmlFor="r-fd">{t('departureDate')}</label>
             <input id="r-fd" type="date" value={flightDate} onChange={(e) => setFlightDate(e.target.value)} />
           </div>
         </div>
         <button type="submit" disabled={busy || !flightNumber || !flightDate}>
-          {busy ? '検索中…' : '検索'}
+          {busy ? t('searching') : t('search')}
         </button>
       </form>
 
@@ -78,7 +80,7 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
           <p className="error">{error}</p>
           {offerManual && (
             <button className="ghost" onClick={onFallback}>
-              手入力で登録する
+              {t('manualFallback')}
             </button>
           )}
         </div>
@@ -86,9 +88,7 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
 
       {candidates && candidates.length > 0 && (
         <div style={{ marginTop: '1rem' }}>
-          <p className="muted">
-            {candidates.length > 1 ? '複数の区間が見つかりました。登録する便を選んでください:' : '見つかりました:'}
-          </p>
+          <p className="muted">{candidates.length > 1 ? t('foundMany') : t('foundOne')}</p>
           {candidates.map((c, i) => (
             <div
               key={i}
@@ -106,7 +106,7 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
                 {c.canceled && <span className="muted"> (canceled)</span>}
               </span>
               <button onClick={() => add(c)} disabled={busy}>
-                追加
+                {t('add')}
               </button>
             </div>
           ))}

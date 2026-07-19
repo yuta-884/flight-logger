@@ -11,12 +11,13 @@ const RESERVED = new Set([
 // [a-z0-9-]、先頭は英字、末尾はハイフン不可、連続ハイフン不可、3〜30文字
 const FORMAT = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
-export function validateSlug(raw: string): { ok: true; slug: string } | { ok: false; reason: string } {
+// 表示メッセージはi18n辞書（slugErr_*）で解決するため、理由はコードで返す
+export type SlugErrorCode = 'length' | 'format' | 'reserved';
+
+export function validateSlug(raw: string): { ok: true; slug: string } | { ok: false; reason: SlugErrorCode } {
   const slug = raw.trim().toLowerCase();
-  if (slug.length < 3 || slug.length > 30) return { ok: false, reason: '3〜30文字にしてください' };
-  if (!FORMAT.test(slug)) {
-    return { ok: false, reason: '小文字英数字とハイフンのみ。先頭は英字、連続・末尾のハイフンは不可' };
-  }
-  if (RESERVED.has(slug)) return { ok: false, reason: 'この語は予約されています' };
+  if (slug.length < 3 || slug.length > 30) return { ok: false, reason: 'length' };
+  if (!FORMAT.test(slug)) return { ok: false, reason: 'format' };
+  if (RESERVED.has(slug)) return { ok: false, reason: 'reserved' };
   return { ok: true, slug };
 }
