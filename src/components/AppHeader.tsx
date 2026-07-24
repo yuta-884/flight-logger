@@ -8,10 +8,11 @@ export function AppHeader() {
   const { profile, signOut } = useAuth();
   const { lang, setLang } = useI18n();
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '1.2rem' }}>
-        <h1 className="brand" style={{ fontSize: '1.3rem' }}>✈ FLIGHT LOGGER</h1>
-        <nav style={{ display: 'flex', gap: '0.8rem', fontSize: '0.9rem' }}>
+    <header className="app-header">
+      {/* 1段目: ロゴ（左）＋ナビ（右）。狭幅でもこの2つは必ず同じ行に収める */}
+      <div className="app-header-top">
+        <h1 className="brand">✈ FLIGHT LOGGER</h1>
+        <nav className="app-nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'navlink active' : 'navlink')}>
             Log
           </NavLink>
@@ -23,18 +24,18 @@ export function AppHeader() {
           </NavLink>
         </nav>
       </div>
-      <div className="muted" style={{ fontSize: '0.85rem' }}>
-        {profile?.slug} ·{' '}
+      {/* 2段目: ユーザーID・言語・ログアウト（右寄せ） */}
+      <div className="app-header-user muted">
+        <span>{profile?.slug}</span>
         <select
           value={lang}
           onChange={(e) => setLang(e.target.value as Lang)}
           aria-label="Language"
-          style={{ width: 'auto', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
         >
           <option value="ja">日本語</option>
           <option value="en">English</option>
-        </select>{' '}
-        · <button className="ghost" style={{ padding: '0.3rem 0.6rem' }} onClick={signOut}>Log out</button>
+        </select>
+        <button className="ghost" onClick={signOut}>Log out</button>
       </div>
     </header>
   );

@@ -36,7 +36,8 @@ export function FlightList({ flights, onChanged }: { flights: Flight[]; onChange
   }
 
   return (
-    <div className="card">
+    // 狭幅では表が入りきらないため、ページ全体ではなくカード内で横スクロールさせる
+    <div className="card table-scroll">
       <table>
         <thead>
           <tr>
@@ -75,8 +76,14 @@ export function FlightList({ flights, onChanged }: { flights: Flight[]; onChange
                 />
               </td>
               <td style={{ textAlign: 'right' }}>
-                <button className="danger" onClick={() => remove(f.id)} disabled={deletingId === f.id}>
-                  {deletingId === f.id ? '…' : t('del')}
+                {/* 狭幅ではラベルを隠して✕アイコン表示にする（CSS）。読み上げはaria-labelが担う */}
+                <button
+                  className="danger"
+                  onClick={() => remove(f.id)}
+                  disabled={deletingId === f.id}
+                  aria-label={t('del')}
+                >
+                  {deletingId === f.id ? '…' : <span className="btn-label">{t('del')}</span>}
                 </button>
               </td>
             </tr>

@@ -129,10 +129,93 @@ button.danger {
   margin-bottom: 1rem;
 }
 
+/* ── アプリヘッダー: 1段目=ロゴ+ナビ / 2段目=ユーザー操作（右寄せ） ── */
+.app-header {
+  margin-bottom: 1.5rem;
+}
+.app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.app-header .brand {
+  font-size: 1.3rem;
+  width: fit-content;
+  white-space: nowrap; /* FLIGHT / LOGGER で折り返させない */
+}
+.app-nav {
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.app-header-user {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+}
+.app-header-user select {
+  width: auto;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+}
+.app-header-user button {
+  padding: 0.3rem 0.6rem;
+}
+/* 狭幅ではロゴを縮めてナビと必ず1行に収める */
+@media (max-width: 26rem) {
+  .app-header .brand {
+    font-size: 1.05rem;
+    letter-spacing: 0.05em;
+  }
+  .app-nav {
+    gap: 0.6rem;
+    font-size: 0.85rem;
+  }
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+}
+
+/* 表が枠に収まらないときは、ページごと横に伸ばさずこの中だけスクロールさせる。
+   幅は自然幅にまかせ、狭幅では余白・文字を詰めて多くの端末で1画面に収める */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 30rem) {
+  .table-scroll table {
+    font-size: 0.8rem;
+  }
+  .table-scroll th,
+  .table-scroll td {
+    padding: 0.4rem 0.2rem;
+  }
+  .table-scroll .danger {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  /* ボタン・日付は途中で折り返させない（折れると読みにくい） */
+  .table-scroll .danger,
+  .table-scroll td:first-child {
+    white-space: nowrap;
+  }
+  /* 削除ボタンはラベルを畳んで✕に。これで表全体が画面幅に収まる */
+  .table-scroll .danger .btn-label {
+    display: none;
+  }
+  /* 削除中（…表示）には付けない */
+  .table-scroll .danger:has(.btn-label)::before {
+    content: '✕';
+  }
 }
 
 th,
@@ -325,11 +408,14 @@ th {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
 }
+/* 隣接する国旗の連なりは改行機会がなく1行に伸び続けるため、flexで折り返す */
 .flags {
   margin-top: 0.9rem;
   font-size: 1.9rem;
   line-height: 1.45;
-  letter-spacing: 0.15em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.28rem;
 }
 .flags .transit {
   opacity: 0.35;
