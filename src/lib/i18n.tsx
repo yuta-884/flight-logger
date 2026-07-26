@@ -6,6 +6,17 @@ import { createContext, useContext, useState } from 'react';
 export type Lang = 'ja' | 'en';
 
 const ja = {
+  // ログイン・オンボーディング
+  signInTitle: 'ログイン',
+  appTagline: 'フライトの記録・統計・地球儀',
+  signInDesc: 'Googleアカウントでログインして、自分のフライトを記録します。',
+  signInWithGoogle: 'Googleでログイン',
+  redirecting: 'リダイレクト中…',
+  onboardingTitle: 'ユーザーIDを決める',
+  onboardingDesc: '公開プロフィールのURL（/u/ユーザーID）に使われます。あとから変更できます。',
+  onboardingSubmit: '決定',
+  onboardingCreating: '作成中…',
+
   // ログ画面
   loadingMasters: 'マスタ読み込み中…',
   loading: '読み込み中…',
@@ -35,6 +46,7 @@ const ja = {
   resolveErr_unauthorized: 'ログインが必要です。',
   resolveErr_upstream_error: 'フライト情報サービスが応答しませんでした。時間をおいて再試行してください。',
   resolveErr_unknown: '解決に失敗しました。手入力で登録してください。',
+  attribution: 'フライト情報: AeroDataBox',
   importTitle: 'Flighty CSV をインポート',
   importDesc:
     'Flightyの Settings → Account Data → Export Your Flights で書き出したCSVを取り込みます。何度実行しても重複しません。',
@@ -60,6 +72,10 @@ const ja = {
   publicDesc: '公開にすると、誰でも下記URLであなたの統計・地球儀を閲覧できます。',
   makePublic: '公開する',
   makePrivate: '非公開にする',
+  userId: 'ユーザーID',
+  displayNameCard: '表示名',
+  displayNameDesc: '公開ページと埋め込みカードに表示される名前です。空欄にするとユーザーIDが表示されます。',
+  saveDisplayName: '表示名を保存',
   userIdCard: 'ユーザーID（公開URL）',
   userIdSaved: '保存しました。',
   userIdWarning: '変更すると旧URL（{url}）は無効になり、共有リンクが切れます。',
@@ -80,11 +96,26 @@ const ja = {
   copy: 'コピー',
   copied: '✓ コピーしました',
   iframeHint: 'Notion・ブログなどにこのiframeを貼り付けるとカードが表示されます。',
+
+  // 法務ページ
+  privacyPolicy: 'プライバシーポリシー',
+  termsOfService: '利用規約',
+  back: '戻る',
 } as const;
 
 export type MsgKey = keyof typeof ja;
 
 const en: Record<MsgKey, string> = {
+  signInTitle: 'Sign in',
+  appTagline: 'Log your flights. See your stats and globe.',
+  signInDesc: 'Sign in with your Google account to start logging your flights.',
+  signInWithGoogle: 'Sign in with Google',
+  redirecting: 'Redirecting…',
+  onboardingTitle: 'Choose your user ID',
+  onboardingDesc: 'It becomes your public profile URL (/u/your-id). You can change it later.',
+  onboardingSubmit: 'Continue',
+  onboardingCreating: 'Creating…',
+
   loadingMasters: 'Loading masters…',
   loading: 'Loading…',
   tabSearchByFlight: 'Search by flight no.',
@@ -113,6 +144,7 @@ const en: Record<MsgKey, string> = {
   resolveErr_unauthorized: 'Please sign in.',
   resolveErr_upstream_error: 'The flight data service did not respond. Please try again later.',
   resolveErr_unknown: 'Lookup failed. Please add the flight manually.',
+  attribution: 'Flight data by AeroDataBox',
   importTitle: 'Import Flighty CSV',
   importDesc:
     'Import the CSV exported from Flighty (Settings → Account Data → Export Your Flights). Safe to run repeatedly — no duplicates.',
@@ -137,6 +169,10 @@ const en: Record<MsgKey, string> = {
   publicDesc: 'When public, anyone can view your stats and globe at the URL below.',
   makePublic: 'Make public',
   makePrivate: 'Make private',
+  userId: 'User ID',
+  displayNameCard: 'Display name',
+  displayNameDesc: 'Shown on your public page and embed card. If left empty, your user ID is shown instead.',
+  saveDisplayName: 'Save display name',
   userIdCard: 'User ID (public URL)',
   userIdSaved: 'Saved.',
   userIdWarning: 'Changing it invalidates the old URL ({url}); shared links will break.',
@@ -157,6 +193,10 @@ const en: Record<MsgKey, string> = {
   copy: 'Copy',
   copied: '✓ Copied',
   iframeHint: 'Paste this iframe into Notion, a blog, etc. to show the card.',
+
+  privacyPolicy: 'Privacy Policy',
+  termsOfService: 'Terms of Service',
+  back: 'Back',
 };
 
 const dicts: Record<Lang, Record<MsgKey, string>> = { ja, en };

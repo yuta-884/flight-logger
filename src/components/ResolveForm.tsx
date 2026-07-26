@@ -75,6 +75,14 @@ export function ResolveForm({ onAdded, onFallback }: { onAdded: () => void; onFa
         </button>
       </form>
 
+      {/* データ提供元のクレジット（AeroDataBox利用規約 Art.5.2.k） */}
+      <p className="muted" style={{ fontSize: '0.75rem', marginTop: '0.7rem' }}>
+        {t('attribution')}{' '}
+        <a href="https://aerodatabox.com/" target="_blank" rel="noopener noreferrer">
+          aerodatabox.com
+        </a>
+      </p>
+
       {error && (
         <div style={{ marginTop: '1rem' }}>
           <p className="error">{error}</p>

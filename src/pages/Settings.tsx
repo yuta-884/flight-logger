@@ -6,6 +6,7 @@ import { useI18n } from '../lib/i18n';
 import { listCountries, loadMasters, type Country } from '../lib/masters';
 import { loadManualCountries } from '../lib/publicProfile';
 import { AppHeader } from '../components/AppHeader';
+import { LegalFooter } from '../components/LegalFooter';
 
 // ISO 3166-1 alpha-2 → 絵文字国旗
 const flagOf = (cc: string) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
@@ -20,6 +21,8 @@ export function Settings() {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | undefined>(undefined);
+  const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
+  const [nameSaved, setNameSaved] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
   const [manual, setManual] = useState<{ code: string; name: string | null }[]>([]);
   const [selCountry, setSelCountry] = useState('');
@@ -74,6 +77,25 @@ export function Settings() {
     const { error } = await supabase.from('profiles').update({ is_public: !profile.is_public }).eq('id', profile.id);
     setBusy(false);
     if (!error) await refreshProfile();
+  }
+
+  // 公開ページ・カードに出る名前。空欄ならnullにしてユーザーIDが表示されるようにする
+  async function saveDisplayName(e: React.FormEvent) {
+    e.preventDefault();
+    setNameSaved(false);
+    const next = displayName.trim();
+    setBusy(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ display_name: next === '' ? null : next })
+      .eq('id', profile!.id);
+    setBusy(false);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    await refreshProfile();
+    setNameSaved(true);
   }
 
   async function saveSlug(e: React.FormEvent) {
@@ -139,6 +161,28 @@ export function Settings() {
           </button>
         </div>
       </div>
+
+      <form className="card" onSubmit={saveDisplayName} style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginTop: 0 }}>{t('displayNameCard')}</h2>
+        <div className="field">
+          <input
+            id="display-name"
+            aria-label={t('displayNameCard')}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder={profile.slug}
+            maxLength={50}
+            autoComplete="off"
+          />
+        </div>
+        {nameSaved && <p className="muted">{t('userIdSaved')}</p>}
+        <p className="muted" style={{ fontSize: '0.8rem' }}>
+          {t('displayNameDesc')}
+        </p>
+        <button type="submit" disabled={busy || displayName.trim() === (profile.display_name ?? '')}>
+          {t('saveDisplayName')}
+        </button>
+      </form>
 
       <form className="card" onSubmit={saveSlug} style={{ marginBottom: '1.5rem' }}>
         <h2 style={{ marginTop: 0 }}>{t('userIdCard')}</h2>
@@ -245,6 +289,8 @@ export function Settings() {
           </div>
         </div>
       )}
+
+      <LegalFooter />
 
       {copied && (
         <div

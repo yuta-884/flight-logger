@@ -136,7 +136,10 @@ create table api_lookups (
 | 埋め込みカード | `/embed/{slug}`。公開ONのユーザーのみ。flight-logのパスポート風カード（canvas 2D世界地図・国旗・MRZ）を移植。iframeで外部サイトに埋め込む想定 |
 | 設定画面 | 公開ON/OFFトグル、ユーザーID変更（旧URL失効の注意表示つき）、公開URL・埋め込みiframeコードのコピー、行った国の手動追加 |
 | 行った国の手動追加 | 船・陸路などフライト以外で入国した国を設定画面から追加（国一覧は空港マスタから導出）。統計の国カウントに滞在としてマージされ、乗継のみの国に追加すると「滞在した国」へ昇格。公開ページ・埋め込みカードにも反映 |
-| 多言語（日英） | ヘッダーの切替ボタンで日本語⇔英語（localStorage保存、初期値はブラウザ言語）。対象はログ画面・設定画面・オンボーディングのエラー文言。統計・公開ページ・埋め込みカード・ヘッダーのラベルは常に英語（`src/lib/i18n.tsx`） |
+| 多言語（日英） | ヘッダー・ログイン画面・法務ページのセレクトで日本語⇔英語（localStorage保存、初期値はブラウザ言語）。対象はログイン・オンボーディング・ログ画面・設定画面・法務ページ。統計・公開ページ・埋め込みカード・ナビのラベルは常に英語（`src/lib/i18n.tsx`） |
+| 表示名の編集 | 設定画面で公開ページ・カードに出る表示名を変更できる（初期値はGoogleアカウントの氏名）。空欄にするとユーザーIDが表示される＝本名を出さない選択が可能 |
+| 法務ページ | `/privacy`（プライバシーポリシー）・`/terms`（利用規約）。認証不要の公開ルート。日英併記で日本語を正文とし、英語には参考訳である旨を明記。ログイン画面と設定画面の最下部からリンク（`src/pages/Legal.tsx`、事業者名・連絡先の定義はこのファイルが唯一の箇所） |
+| データ提供元の表示 | API検索フォームに "Flight data by AeroDataBox" のクレジットとリンクを表示（利用規約 Art.5.2.k 対応） |
 
 画面タイトルは全画面「✈ FLIGHT LOGGER」（グラデーション文字）で統一。公開ページのサブタイトルは `{表示名} · {slug}`、埋め込みカードのタグラインは `{表示名}'s Flight Stats`。
 
@@ -183,6 +186,14 @@ create table api_lookups (
 - **Edge Function**: `npx supabase functions deploy resolve-flight`。AeroDataBoxのAPIキーは `npx supabase secrets set` で登録（リポジトリ・クライアントには置かない）
 - **DBスキーマ**: `supabase/migrations/` のSQLをSupabase SQL Editorで実行
 - **認証設定**: Supabase Auth URL Configuration — Site URLは本番URL、Redirect URLsに本番URLと `http://localhost:5173`（開発用）を登録。Google OAuth側はコールバック先がSupabaseドメインのため本番URL追加時の変更不要
+
+### 一般公開に向けた残作業
+
+公開前に必要なのは**Google OAuth同意画面の本番公開のみ**（テストモードのままだと登録者が100人で頭打ち）。スコープは email / profile / openid の非機微スコープのみのため、Googleの審査（verification）は不要で、ポリシーURLの登録も必須ではない。
+
+- 退会（アカウント削除）機能は**実装しない方針**。個人情報保護法第35条が求めるのは請求への対応であってUI上のボタンではなく、`auth.users` からの削除が `profiles` → `flights` / `manual_countries` へcascadeするため、ダッシュボードでの手動対応で完結する。利用者数が増えて手動対応が負担になった時点で再検討する
+- API解決のクォータ（§6）は当面現状維持。友人中心の規模では全体500回/月で足りる見込み。一般利用が増えたら1ユーザーあたりの上限引き下げ、または有料プラン移行を検討する
+- 未実施（任意）: OGP/SNSカード（`/u/` 共有時のプレビュー。Worker側でmeta注入が必要）、ランディングページ、favicon、ErrorBoundary、データエクスポート、独自ドメイン、robots.txt
 
 ### 残論点
 

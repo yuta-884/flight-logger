@@ -44,12 +44,10 @@ export function Onboarding() {
     <div className="container">
       <h1 className="brand">✈ FLIGHT LOGGER</h1>
       <form className="card" onSubmit={submit} style={{ marginTop: '1.5rem', maxWidth: '30rem' }}>
-        <h2>ユーザーIDを決める</h2>
-        <p className="muted">
-          あなたの公開プロフィールのURL（<code>/u/ユーザーID</code>）に使われます。あとから変更できます。
-        </p>
+        <h2>{t('onboardingTitle')}</h2>
+        <p className="muted">{t('onboardingDesc')}</p>
         <div className="field">
-          <label htmlFor="slug">ユーザーID</label>
+          <label htmlFor="slug">{t('userId')}</label>
           <input
             id="slug"
             value={slug}
@@ -61,7 +59,7 @@ export function Onboarding() {
         </div>
         {error && <p className="error">{error}</p>}
         <button type="submit" disabled={busy || slug.length < 3}>
-          {busy ? '作成中…' : '決定'}
+          {busy ? t('onboardingCreating') : t('onboardingSubmit')}
         </button>
       </form>
     </div>

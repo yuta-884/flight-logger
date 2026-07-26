@@ -129,6 +129,29 @@ button.danger {
   margin-bottom: 1rem;
 }
 
+/* ── 法務ページ（プライバシーポリシー・利用規約）: 長文を読みやすく ── */
+.legal .card {
+  line-height: 1.85;
+  font-size: 0.92rem;
+}
+.legal h3 {
+  font-size: 0.95rem;
+  margin: 1.6rem 0 0.4rem;
+}
+.legal h3:first-of-type {
+  margin-top: 1rem;
+}
+.legal p {
+  margin: 0.4rem 0;
+}
+.legal ul {
+  margin: 0.4rem 0;
+  padding-left: 1.2rem;
+}
+.legal li {
+  margin: 0.25rem 0;
+}
+
 /* ── アプリヘッダー: 1段目=ロゴ+ナビ / 2段目=ユーザー操作（右寄せ） ── */
 .app-header {
   margin-bottom: 1.5rem;
