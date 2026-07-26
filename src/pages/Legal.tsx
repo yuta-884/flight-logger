@@ -5,7 +5,8 @@ import { useI18n, type Lang } from '../lib/i18n';
 // 日本語を正文とし、英語は参考訳（UIの言語設定に連動して表示を切り替える）。
 // 事業者名・連絡先はここが唯一の定義箇所。
 
-const OPERATOR = 'Yuta Hayashi';
+const OPERATOR_JA = '林 悠太';
+const OPERATOR_EN = 'Yuta Hayashi';
 const CONTACT = 'yuuta0711884@gmail.com';
 const ENACTED = '2026-07-26';
 
@@ -76,7 +77,7 @@ function PrivacyJa() {
 
       <h3>1. 事業者</h3>
       <p>
-        {OPERATOR}（個人）
+        {OPERATOR_JA}（個人）
         <br />
         連絡先: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
       </p>
@@ -139,7 +140,7 @@ function PrivacyEn() {
 
       <h3>1. Operator</h3>
       <p>
-        {OPERATOR} (individual)
+        {OPERATOR_EN} (individual)
         <br />
         Contact: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
       </p>
