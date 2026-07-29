@@ -7,7 +7,7 @@ import { useI18n, type Lang } from '../lib/i18n';
 
 const OPERATOR_JA = '林 悠太';
 const OPERATOR_EN = 'Yuta Hayashi';
-const CONTACT = 'yuuta0711884@gmail.com';
+const CONTACT = 'nayutalabs@gmail.com';
 const ENACTED = '2026-07-26';
 
 function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
