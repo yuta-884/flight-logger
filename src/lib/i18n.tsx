@@ -101,6 +101,9 @@ const ja = {
   privacyPolicy: 'プライバシーポリシー',
   termsOfService: '利用規約',
   back: '戻る',
+  consentPrefix: '続行すると、',
+  consentMiddle: '・',
+  consentSuffix: 'に同意したものとみなします。',
 } as const;
 
 export type MsgKey = keyof typeof ja;
@@ -197,6 +200,9 @@ const en: Record<MsgKey, string> = {
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
   back: 'Back',
+  consentPrefix: 'By continuing, you agree to the ',
+  consentMiddle: ' and ',
+  consentSuffix: '.',
 };
 
 const dicts: Record<Lang, Record<MsgKey, string>> = { ja, en };

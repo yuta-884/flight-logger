@@ -4,6 +4,7 @@ import { loadPublicStats } from '../lib/publicProfile';
 import type { Stats } from '../lib/stats';
 import { StatCards } from '../components/StatCards';
 import { GlobeView } from '../components/Globe';
+import { LegalFooter } from '../components/LegalFooter';
 
 // 公開プロフィール /u/{slug}。匿名でも閲覧可（RLSが公開ユーザーのみ許可）。読み取り専用。
 export function PublicProfile() {
@@ -46,6 +47,8 @@ export function PublicProfile() {
           </>
         )
       )}
+
+      <LegalFooter />
     </div>
   );
 }

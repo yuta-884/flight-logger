@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { useI18n } from '../lib/i18n';
 import { validateSlug } from '../lib/slug';
+import { ConsentNote } from '../components/LegalFooter';
 
 // 初回ログイン後、公開URL用のslugを本人が入力して profiles を作成する
 export function Onboarding() {
@@ -61,6 +62,7 @@ export function Onboarding() {
         <button type="submit" disabled={busy || slug.length < 3}>
           {busy ? t('onboardingCreating') : t('onboardingSubmit')}
         </button>
+        <ConsentNote />
       </form>
     </div>
   );

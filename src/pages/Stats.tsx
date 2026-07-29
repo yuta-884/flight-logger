@@ -8,6 +8,7 @@ import type { Flight } from '../lib/types';
 import { AppHeader } from '../components/AppHeader';
 import { StatCards } from '../components/StatCards';
 import { GlobeView } from '../components/Globe';
+import { LegalFooter } from '../components/LegalFooter';
 
 // 統計ページ。自分のフライトをDBから取得し、クライアントで集計（flight-logのbuild_stats移植）。
 export function Stats() {
@@ -56,6 +57,8 @@ export function Stats() {
           <StatCards stats={stats} />
         </>
       )}
+
+      <LegalFooter />
     </div>
   );
 }

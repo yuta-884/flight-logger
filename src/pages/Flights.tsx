@@ -7,6 +7,7 @@ import { AppHeader } from '../components/AppHeader';
 import { AddFlight } from '../components/AddFlight';
 import { ImportFlighty } from '../components/ImportFlighty';
 import { FlightList } from '../components/FlightList';
+import { LegalFooter } from '../components/LegalFooter';
 
 export function Flights() {
   const { t } = useI18n();
@@ -46,6 +47,8 @@ export function Flights() {
 
       {error && <p className="error">{error}</p>}
       {loading ? <p className="muted">{t('loading')}</p> : <FlightList flights={flights} onChanged={load} />}
+
+      <LegalFooter />
     </div>
   );
 }
