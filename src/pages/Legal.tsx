@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { useI18n, type Lang } from '../lib/i18n';
+import { useI18n } from '../lib/i18n';
+import { AppHeader } from '../components/AppHeader';
 
 // プライバシーポリシー・利用規約。認証不要の公開ページ。
 // 日本語を正文とし、英語は参考訳（UIの言語設定に連動して表示を切り替える）。
@@ -10,29 +10,13 @@ const OPERATOR_EN = 'Yuta Hayashi';
 const CONTACT = 'nayutalabs@gmail.com';
 const ENACTED = '2026-07-26';
 
-// 法務ページ・ガイドページ共通のレイアウト（戻るリンク＋言語セレクタ＋カード）
+// 法務ページ・ガイドページ共通のレイアウト。ヘッダーは他画面と同じAppHeader
+// （2段目の左端に「← 戻る」が入る）を使う
 export function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
-  const { t, lang, setLang } = useI18n();
   return (
     <div className="container legal">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-        <Link to="/" className="navlink">
-          ← {t('back')}
-        </Link>
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value as Lang)}
-          aria-label="Language"
-          style={{ width: 'auto', padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
-        >
-          <option value="ja">日本語</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-      <h1 className="brand" style={{ fontSize: '1.3rem', width: 'fit-content', marginTop: '1rem' }}>
-        ✈ FLIGHT LOGGER
-      </h1>
-      <div className="card" style={{ marginTop: '1.2rem' }}>
+      <AppHeader showBack />
+      <div className="card">
         <h2 style={{ marginTop: 0, fontSize: '1.05rem', textTransform: 'none', letterSpacing: 'normal', color: 'var(--fg)' }}>
           {title}
         </h2>
