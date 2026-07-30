@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useI18n, type Lang } from '../lib/i18n';
 import { LegalFooter } from '../components/LegalFooter';
@@ -45,6 +46,9 @@ export function Login() {
           {busy ? t('redirecting') : t('signInWithGoogle')}
         </button>
         {error && <p className="error" style={{ marginTop: '0.8rem' }}>{error}</p>}
+        <p className="muted" style={{ marginTop: '1rem', marginBottom: 0, fontSize: '0.85rem' }}>
+          <Link to="/guide">{t('guide')} →</Link>
+        </p>
       </div>
       <LegalFooter />
     </div>

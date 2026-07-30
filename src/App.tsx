@@ -7,6 +7,7 @@ import { Onboarding } from './pages/Onboarding';
 import { Flights } from './pages/Flights';
 import { Settings } from './pages/Settings';
 import { Privacy, Terms } from './pages/Legal';
+import { Guide } from './pages/Guide';
 import { NotConfigured } from './pages/NotConfigured';
 
 // globe.gl / three.js を含む重いページは遅延ロード（初期ロードを軽くする）
@@ -40,6 +41,7 @@ export function App() {
       <Route path="/embed/:slug" element={<Suspense fallback={loadingEl}><EmbedCard /></Suspense>} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/guide" element={<Guide />} />
 
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
       <Route

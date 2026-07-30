@@ -10,7 +10,8 @@ const OPERATOR_EN = 'Yuta Hayashi';
 const CONTACT = 'nayutalabs@gmail.com';
 const ENACTED = '2026-07-26';
 
-function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
+// 法務ページ・ガイドページ共通のレイアウト（戻るリンク＋言語セレクタ＋カード）
+export function LegalLayout({ title, children }: { title: string; children: React.ReactNode }) {
   const { t, lang, setLang } = useI18n();
   return (
     <div className="container legal">

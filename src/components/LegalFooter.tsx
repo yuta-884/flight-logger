@@ -7,6 +7,8 @@ export function LegalFooter() {
   const { t } = useI18n();
   return (
     <p className="muted" style={{ marginTop: '2.5rem', fontSize: '0.8rem' }}>
+      <Link to="/guide">{t('guide')}</Link>
+      {' · '}
       <Link to="/privacy">{t('privacyPolicy')}</Link>
       {' · '}
       <Link to="/terms">{t('termsOfService')}</Link>

@@ -98,6 +98,7 @@ const ja = {
   iframeHint: 'Notion・ブログなどにこのiframeを貼り付けるとカードが表示されます。',
 
   // 法務ページ
+  guide: '使い方ガイド',
   privacyPolicy: 'プライバシーポリシー',
   termsOfService: '利用規約',
   back: '戻る',
@@ -197,6 +198,7 @@ const en: Record<MsgKey, string> = {
   copied: '✓ Copied',
   iframeHint: 'Paste this iframe into Notion, a blog, etc. to show the card.',
 
+  guide: 'How to use',
   privacyPolicy: 'Privacy Policy',
   termsOfService: 'Terms of Service',
   back: 'Back',
