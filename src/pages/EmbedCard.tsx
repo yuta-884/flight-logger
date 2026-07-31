@@ -1,40 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { loadPublicStats } from '../lib/publicProfile';
+import { drawMapScene, fmt, flagOf, renderCardPng, shortDate } from '../lib/cardCanvas';
 import type { Stats } from '../lib/stats';
 
 // 埋め込みカード /embed/{slug}。flight-logのパスポート風カードを移植（canvasの2D世界地図）。
 // iframeで外部サイトに貼る想定。全スタイルは .embed-root 配下にスコープして本体CSSと衝突させない。
+// 直接開いた場合（iframe外）のみ画像ダウンロードボタンを表示。?download=1 で自動ダウンロード。
 
-const fmt = (n: number) => n.toLocaleString('en-US');
-const flagOf = (cc: string) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
-const shortDate = (iso: string | null) => {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const mon = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-  return `${String(d.getDate()).padStart(2, '0')} ${mon} ${String(d.getFullYear()).slice(2)}`;
-};
 const FILL = '<'.repeat(400);
-
-// 等長方形図法（南極は切る）
-const LAT_TOP = 84, LAT_BOTTOM = -58;
-function project(lon: number, lat: number, W: number, H: number): [number, number] {
-  return [((lon + 180) / 360) * W, ((LAT_TOP - lat) / (LAT_TOP - LAT_BOTTOM)) * H];
-}
-function greatCircle(a: { lat: number; lon: number }, b: { lat: number; lon: number }, n = 48) {
-  const rad = Math.PI / 180;
-  const p1 = [Math.cos(a.lat * rad) * Math.cos(a.lon * rad), Math.cos(a.lat * rad) * Math.sin(a.lon * rad), Math.sin(a.lat * rad)];
-  const p2 = [Math.cos(b.lat * rad) * Math.cos(b.lon * rad), Math.cos(b.lat * rad) * Math.sin(b.lon * rad), Math.sin(b.lat * rad)];
-  const omega = Math.acos(Math.min(1, p1[0] * p2[0] + p1[1] * p2[1] + p1[2] * p2[2]));
-  const pts: { lon: number; lat: number }[] = [];
-  for (let i = 0; i <= n; i++) {
-    const t = i / n;
-    const s1 = Math.sin((1 - t) * omega) / Math.sin(omega), s2 = Math.sin(t * omega) / Math.sin(omega);
-    const v = [s1 * p1[0] + s2 * p2[0], s1 * p1[1] + s2 * p2[1], s1 * p1[2] + s2 * p2[2]];
-    pts.push({ lon: Math.atan2(v[1], v[0]) / rad, lat: Math.asin(v[2] / Math.hypot(...v)) / rad });
-  }
-  return pts;
-}
 
 function drawMap(canvas: HTMLCanvasElement, headWidth: number, geo: any, globe: Stats['globe']) {
   const W = headWidth;
@@ -45,58 +19,43 @@ function drawMap(canvas: HTMLCanvasElement, headWidth: number, geo: any, globe: 
   canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d')!;
   ctx.scale(dpr, dpr);
-
-  ctx.fillStyle = 'rgba(111, 150, 255, .26)';
-  for (const f of geo.features) {
-    const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
-    for (const poly of polys) {
-      ctx.beginPath();
-      for (const ring of poly) {
-        ring.forEach(([lon, lat]: [number, number], i: number) => {
-          const [x, y] = project(lon, lat, W, H);
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-      }
-      ctx.fill('evenodd');
-    }
-  }
-  ctx.strokeStyle = '#3fe0d0';
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 1.2;
-  for (const r of globe.routes) {
-    const pts = greatCircle(r.from, r.to);
-    ctx.beginPath();
-    let prev: { lon: number } | null = null;
-    for (const p of pts) {
-      const [x, y] = project(p.lon, p.lat, W, H);
-      if (prev && Math.abs(p.lon - prev.lon) > 180) ctx.moveTo(x, y);
-      else if (prev) ctx.lineTo(x, y);
-      else ctx.moveTo(x, y);
-      prev = p;
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  for (const a of globe.airports) {
-    const [x, y] = project(a.lon, a.lat, W, H);
-    ctx.beginPath();
-    ctx.arc(x, y, 3.2, 0, Math.PI * 2);
-    ctx.fillStyle = '#6f96ff';
-    ctx.fill();
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = '#0c1122';
-    ctx.stroke();
-  }
+  drawMapScene(ctx, W, H, geo, globe);
 }
 
 export function EmbedCard() {
   const { slug = '' } = useParams();
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState<Stats | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
+  const geoRef = useRef<any>(null);
+  const autoDownloaded = useRef(false);
+  // iframe内ではダウンロードボタンを出さない（埋め込み先の見た目を汚さない）
+  const isTopWindow = window.self === window.top;
+
+  async function download() {
+    if (!stats || !geoRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const blob = await renderCardPng({
+        stats,
+        displayName: displayName ?? slug,
+        slug,
+        geo: geoRef.current,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `flight-logger-${slug}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   // iframe埋め込み用にページ背景を透過にする
   useEffect(() => {
@@ -129,7 +88,13 @@ export function EmbedCard() {
       .then((r) => r.json())
       .then((g) => {
         geo = g;
+        geoRef.current = g;
         render();
+        // Settingsの「カード画像をダウンロード」からの遷移（?download=1）で自動実行
+        if (searchParams.get('download') === '1' && !autoDownloaded.current) {
+          autoDownloaded.current = true;
+          void download();
+        }
       })
       .catch(() => {});
     window.addEventListener('resize', render);
@@ -137,7 +102,8 @@ export function EmbedCard() {
   }, [stats]);
 
   const css = `
-    .embed-root { display: flex; justify-content: center; padding: 4px; }
+    .embed-root { display: flex; flex-direction: column; align-items: center; padding: 4px; }
+    .embed-root .dl-btn { margin-top: 0.9rem; }
     .embed-root .ecard { width: 100%; max-width: 640px; position: relative; border-radius: 1.1rem; overflow: hidden;
       background: linear-gradient(155deg, color-mix(in srgb, var(--card) 88%, var(--accent)) 0%, var(--card) 45%);
       box-shadow: 0 20px 50px rgba(30,60,180,.22), 0 2px 12px rgba(0,0,0,.45); padding: 1.2rem 1.4rem 1rem; }
@@ -219,6 +185,11 @@ export function EmbedCard() {
           <div className="line"><span>{`ISSUED${issued}${home}`}</span><span className="fill">{FILL}</span><span>FLIGHT-LOG</span></div>
         </div>
       </div>
+      {isTopWindow && (
+        <button className="ghost dl-btn" onClick={download} disabled={downloading}>
+          {downloading ? 'Generating…' : 'Download image'}
+        </button>
+      )}
     </div>
   );
 }

@@ -96,6 +96,7 @@ const ja = {
   copy: 'コピー',
   copied: '✓ コピーしました',
   iframeHint: 'Notion・ブログなどにこのiframeを貼り付けるとカードが表示されます。',
+  downloadCard: 'カード画像をダウンロード',
 
   // 法務ページ
   guide: '使い方ガイド',
@@ -197,6 +198,7 @@ const en: Record<MsgKey, string> = {
   copy: 'Copy',
   copied: '✓ Copied',
   iframeHint: 'Paste this iframe into Notion, a blog, etc. to show the card.',
+  downloadCard: 'Download card image',
 
   guide: 'How to use',
   privacyPolicy: 'Privacy Policy',

@@ -286,6 +286,14 @@ export function Settings() {
             <p className="muted" style={{ fontSize: '0.8rem' }}>
               {t('iframeHint')}
             </p>
+            {/* 埋め込みページ側で ?download=1 を検知してPNGを自動生成・保存する */}
+            <button
+              className="ghost"
+              type="button"
+              onClick={() => window.open(`${embedUrl}?download=1`, '_blank', 'noopener')}
+            >
+              {t('downloadCard')}
+            </button>
           </div>
         </div>
       )}
