@@ -158,17 +158,19 @@ export async function renderLogbookCardPng({ stats, displayName, slug, geo }: Ca
   try { (ctx as any).letterSpacing = '1.4px'; } catch { /* noop */ }
   ctx.fillText('TOTAL TO DATE', colYear, totalTop + 14);
   try { (ctx as any).letterSpacing = '0px'; } catch { /* noop */ }
+  // 合計の2値は同じ配色にする（各数字の幅いっぱいにグラデーションをかける）
   ctx.textAlign = 'right';
   ctx.font = `800 20px ${FONT}`;
-  ctx.fillStyle = C.fg;
-  ctx.fillText(String(stats.total_flights), colFlights, totalTop + 18);
-  const kmText = fmt(stats.total_distance_km);
-  const kmW = ctx.measureText(kmText).width;
-  const kmGrad = ctx.createLinearGradient(colKm - kmW, 0, colKm, 0);
-  kmGrad.addColorStop(0, C.accent);
-  kmGrad.addColorStop(1, C.accent2);
-  ctx.fillStyle = kmGrad;
-  ctx.fillText(kmText, colKm, totalTop + 18);
+  const gradNumber = (text: string, right: number) => {
+    const w = ctx.measureText(text).width;
+    const g = ctx.createLinearGradient(right - w, 0, right, 0);
+    g.addColorStop(0, C.accent);
+    g.addColorStop(1, C.accent2);
+    ctx.fillStyle = g;
+    ctx.fillText(text, right, totalTop + 18);
+  };
+  gradNumber(String(stats.total_flights), colFlights);
+  gradNumber(fmt(stats.total_distance_km), colKm);
 
   // 補助情報＋国旗
   ctx.textAlign = 'left';
