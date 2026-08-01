@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { loadPublicStats } from '../lib/publicProfile';
 import { drawMapScene, fmt, flagOf, renderCardPng, shortDate } from '../lib/cardCanvas';
+import { renderGlobeCardPng } from '../lib/globeCard';
 import type { Stats } from '../lib/stats';
 
 // 埋め込みカード /embed/{slug}。flight-logのパスポート風カードを移植（canvasの2D世界地図）。
@@ -29,6 +30,9 @@ export function EmbedCard() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  // ?style=globe: 案A「夜の地球」デザインの検討用プレビュー（既定は従来カード）
+  const globeStyle = searchParams.get('style') === 'globe';
+  const [globePng, setGlobePng] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const geoRef = useRef<any>(null);
@@ -40,12 +44,10 @@ export function EmbedCard() {
     if (!stats || !geoRef.current || downloading) return;
     setDownloading(true);
     try {
-      const blob = await renderCardPng({
-        stats,
-        displayName: displayName ?? slug,
-        slug,
-        geo: geoRef.current,
-      });
+      const input = { stats, displayName: displayName ?? slug, slug, geo: geoRef.current };
+      const blob = globeStyle
+        ? await renderGlobeCardPng({ ...input, origin: window.location.origin })
+        : await renderCardPng(input);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -90,6 +92,18 @@ export function EmbedCard() {
         geo = g;
         geoRef.current = g;
         render();
+        // プレビュー用に案Aのカードを生成して画像として表示する
+        if (globeStyle) {
+          renderGlobeCardPng({
+            stats,
+            displayName: displayName ?? slug,
+            slug,
+            geo: g,
+            origin: window.location.origin,
+          })
+            .then((blob) => setGlobePng(URL.createObjectURL(blob)))
+            .catch(() => {});
+        }
         // Settingsの「カード画像をダウンロード」からの遷移（?download=1）で自動実行
         if (searchParams.get('download') === '1' && !autoDownloaded.current) {
           autoDownloaded.current = true;
@@ -143,6 +157,27 @@ export function EmbedCard() {
     return <div className="container"><p className="muted">This card doesn't exist or is private.</p></div>;
   }
   if (!stats) return <div className="embed-root"><style>{css}</style><p className="muted">Loading…</p></div>;
+
+  // 案Aプレビュー: 生成したPNGをそのまま表示する（描画は全てcanvas側）
+  if (globeStyle) {
+    return (
+      <div className="embed-root">
+        <style>{css}</style>
+        {globePng ? (
+          <>
+            <img src={globePng} alt="Flight stats card" style={{ width: '100%', maxWidth: 640, display: 'block' }} />
+            {isTopWindow && (
+              <button className="ghost dl-btn" onClick={download} disabled={downloading}>
+                {downloading ? 'Generating…' : 'Download image'}
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="muted">Rendering…</p>
+        )}
+      </div>
+    );
+  }
 
   const min = stats.flight_time.total_minutes;
   const d = Math.floor(min / 1440);
