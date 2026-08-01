@@ -107,13 +107,12 @@ export async function renderLogbookCardPng({ stats, displayName, slug, geo }: Ca
   ctx.fillStyle = C.muted;
   ctx.fillText(slug, W - PAD, PAD + 52);
 
-  // 航路の帯（台帳の添付図というつもり）
+  // 航路の帯（台帳の添付図というつもり）。
+  // 背景は塗らずカード地をそのまま見せ、区切りのない一続きの面にする
   ctx.save();
   ctx.beginPath();
-  ctx.roundRect(PAD, mapTop, IW, mapH, 8);
+  ctx.rect(PAD, mapTop, IW, mapH);
   ctx.clip();
-  ctx.fillStyle = '#0d1120';
-  ctx.fillRect(PAD, mapTop, IW, mapH);
   ctx.translate(PAD, mapTop);
   drawMapScene(ctx, IW, mapH, geo, stats.globe);
   ctx.restore();
