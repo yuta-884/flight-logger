@@ -45,9 +45,7 @@ export function EmbedCard() {
     setDownloading(true);
     try {
       const input = { stats, displayName: displayName ?? slug, slug, geo: geoRef.current };
-      const blob = globeStyle
-        ? await renderGlobeCardPng({ ...input, origin: window.location.origin })
-        : await renderCardPng(input);
+      const blob = globeStyle ? await renderGlobeCardPng(input) : await renderCardPng(input);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -94,13 +92,7 @@ export function EmbedCard() {
         render();
         // プレビュー用に案Aのカードを生成して画像として表示する
         if (globeStyle) {
-          renderGlobeCardPng({
-            stats,
-            displayName: displayName ?? slug,
-            slug,
-            geo: g,
-            origin: window.location.origin,
-          })
+          renderGlobeCardPng({ stats, displayName: displayName ?? slug, slug, geo: g })
             .then((blob) => setGlobePng(URL.createObjectURL(blob)))
             .catch(() => {});
         }

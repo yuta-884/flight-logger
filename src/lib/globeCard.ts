@@ -215,10 +215,9 @@ export interface GlobeCardInput {
   displayName: string;
   slug: string;
   geo: any;
-  origin: string;
 }
 
-export async function renderGlobeCardPng({ stats, displayName, slug, geo, origin }: GlobeCardInput): Promise<Blob> {
+export async function renderGlobeCardPng({ stats, displayName, slug, geo }: GlobeCardInput): Promise<Blob> {
   const SCALE = 2;
   const W = 640;
   const PAD = 34;
@@ -246,16 +245,18 @@ export async function renderGlobeCardPng({ stats, displayName, slug, geo, origin
   });
   if (cur.length) rows.push(cur);
 
-  const R = 188;
-  const globeTop = 84;
+  // 国旗は増えると行が増えるので、地球儀を抑えめにして総高を元のカード程度に保つ
+  const R = 150;
+  const ROW_H = 26;
+  const globeTop = 74;
   const globeBottom = globeTop + R * 2;
-  const nameY = globeBottom + 44;
-  const flagsY = nameY + 26;
-  const flagsH = rows.length * 28;
-  const heroY = flagsY + flagsH + 46;
-  const statsY = heroY + 66;
-  const footerY = statsY + 66;
-  const H = Math.round(footerY + PAD);
+  const nameY = globeBottom + 40;
+  const flagsY = nameY + 22;
+  const flagsH = rows.length * ROW_H;
+  const heroY = flagsY + flagsH + 44;
+  const statsY = heroY + 62;
+  const footerY = statsY + 60;
+  const H = Math.round(footerY + 30);
 
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
@@ -307,7 +308,7 @@ export async function renderGlobeCardPng({ stats, displayName, slug, geo, origin
     const rowW = row.reduce((s, i) => s + flagW[i] + GAP, 0) - GAP;
     let x = (W - rowW) / 2;
     for (const i of row) {
-      ctx.fillText(flagOf(flags[i]), x, flagsY + ri * 28 + 18);
+      ctx.fillText(flagOf(flags[i]), x, flagsY + ri * ROW_H + 18);
       x += flagW[i] + GAP;
     }
   });
@@ -366,11 +367,10 @@ export async function renderGlobeCardPng({ stats, displayName, slug, geo, origin
     try { (ctx as any).letterSpacing = '0px'; } catch { /* noop */ }
   });
 
-  // フッター（公開URL＋データ基準日）
-  const host = origin.replace(/^https?:\/\//, '');
+  // フッター（ユーザーID＋データ基準日）
   ctx.font = `500 11.5px ${FONT}`;
   ctx.fillStyle = C.muted;
-  ctx.fillText(`${host}/u/${slug}   ·   as of ${new Date().toISOString().slice(0, 10)}`, W / 2, footerY);
+  ctx.fillText(`${slug}   ·   as of ${new Date().toISOString().slice(0, 10)}`, W / 2, footerY);
 
   ctx.restore();
 
