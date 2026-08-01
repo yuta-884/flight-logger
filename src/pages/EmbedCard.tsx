@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { loadPublicStats } from '../lib/publicProfile';
 import { drawMapScene, fmt, flagOf, renderCardPng, shortDate } from '../lib/cardCanvas';
 import { renderGlobeCardPng } from '../lib/globeCard';
+import { renderLogbookCardPng, renderMinimalCardPng } from '../lib/altCards';
 import type { Stats } from '../lib/stats';
 
 // 埋め込みカード /embed/{slug}。flight-logのパスポート風カードを移植（canvasの2D世界地図）。
@@ -30,9 +31,10 @@ export function EmbedCard() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  // ?style=globe: 案A「夜の地球」デザインの検討用プレビュー（既定は従来カード）
-  const globeStyle = searchParams.get('style') === 'globe';
-  const [globePng, setGlobePng] = useState<string | null>(null);
+  // ?style=globe|logbook|minimal|compare: 新デザインの検討用プレビュー（既定は従来カード）
+  const style = searchParams.get('style') ?? '';
+  const previewStyle = ['globe', 'logbook', 'minimal', 'compare'].includes(style) ? style : '';
+  const [previews, setPreviews] = useState<{ label: string; url: string }[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const geoRef = useRef<any>(null);
@@ -45,7 +47,14 @@ export function EmbedCard() {
     setDownloading(true);
     try {
       const input = { stats, displayName: displayName ?? slug, slug, geo: geoRef.current };
-      const blob = globeStyle ? await renderGlobeCardPng(input) : await renderCardPng(input);
+      const blob =
+        previewStyle === 'globe'
+          ? await renderGlobeCardPng(input)
+          : previewStyle === 'logbook'
+            ? await renderLogbookCardPng(input)
+            : previewStyle === 'minimal'
+              ? await renderMinimalCardPng(input)
+              : await renderCardPng(input);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -90,11 +99,32 @@ export function EmbedCard() {
         geo = g;
         geoRef.current = g;
         render();
-        // プレビュー用に案Aのカードを生成して画像として表示する
-        if (globeStyle) {
-          renderGlobeCardPng({ stats, displayName: displayName ?? slug, slug, geo: g })
-            .then((blob) => setGlobePng(URL.createObjectURL(blob)))
-            .catch(() => {});
+        // プレビュー用にカードを生成して画像として表示する
+        if (previewStyle) {
+          const input = { stats, displayName: displayName ?? slug, slug, geo: g };
+          const wanted: [string, () => Promise<Blob>][] =
+            previewStyle === 'compare'
+              ? [
+                  ['A: 夜の地球 / Globe', () => renderGlobeCardPng(input)],
+                  ['B: 飛行日誌 / Logbook', () => renderLogbookCardPng(input)],
+                  ['C: ミニマル / Minimal', () => renderMinimalCardPng(input)],
+                ]
+              : previewStyle === 'globe'
+                ? [['A: 夜の地球 / Globe', () => renderGlobeCardPng(input)]]
+                : previewStyle === 'logbook'
+                  ? [['B: 飛行日誌 / Logbook', () => renderLogbookCardPng(input)]]
+                  : [['C: ミニマル / Minimal', () => renderMinimalCardPng(input)]];
+          (async () => {
+            const out: { label: string; url: string }[] = [];
+            for (const [label, fn] of wanted) {
+              try {
+                out.push({ label, url: URL.createObjectURL(await fn()) });
+              } catch {
+                /* 1案の失敗で他を巻き込まない */
+              }
+            }
+            setPreviews(out);
+          })();
         }
         // Settingsの「カード画像をダウンロード」からの遷移（?download=1）で自動実行
         if (searchParams.get('download') === '1' && !autoDownloaded.current) {
@@ -150,15 +180,24 @@ export function EmbedCard() {
   }
   if (!stats) return <div className="embed-root"><style>{css}</style><p className="muted">Loading…</p></div>;
 
-  // 案Aプレビュー: 生成したPNGをそのまま表示する（描画は全てcanvas側）
-  if (globeStyle) {
+  // デザイン案プレビュー: 生成したPNGをそのまま表示する（描画は全てcanvas側）
+  if (previewStyle) {
     return (
       <div className="embed-root">
         <style>{css}</style>
-        {globePng ? (
+        {previews.length ? (
           <>
-            <img src={globePng} alt="Flight stats card" style={{ width: '100%', maxWidth: 640, display: 'block' }} />
-            {isTopWindow && (
+            {previews.map((p) => (
+              <figure key={p.label} style={{ margin: '0 0 1.6rem', width: '100%', maxWidth: 640 }}>
+                {previewStyle === 'compare' && (
+                  <figcaption className="muted" style={{ fontSize: '0.8rem', marginBottom: '0.4rem' }}>
+                    {p.label}
+                  </figcaption>
+                )}
+                <img src={p.url} alt={p.label} style={{ width: '100%', display: 'block' }} />
+              </figure>
+            ))}
+            {isTopWindow && previewStyle !== 'compare' && (
               <button className="ghost dl-btn" onClick={download} disabled={downloading}>
                 {downloading ? 'Generating…' : 'Download image'}
               </button>
