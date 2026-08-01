@@ -1,28 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { loadPublicStats } from '../lib/publicProfile';
-import { drawMapScene, fmt, flagOf, renderCardPng, shortDate } from '../lib/cardCanvas';
-import { renderGlobeCardPng } from '../lib/globeCard';
-import { renderLogbookCardPng, renderMinimalCardPng } from '../lib/altCards';
+import { drawCardOnCanvas, renderCardPng, type CardInput } from '../lib/cardCanvas';
 import type { Stats } from '../lib/stats';
 
-// 埋め込みカード /embed/{slug}。flight-logのパスポート風カードを移植（canvasの2D世界地図）。
-// iframeで外部サイトに貼る想定。全スタイルは .embed-root 配下にスコープして本体CSSと衝突させない。
+// 埋め込みカード /embed/{slug}。iframeで外部サイトに貼る想定。
+// 表示もダウンロードも cardCanvas の同じ描画関数を使う（見た目が食い違わない）。
 // 直接開いた場合（iframe外）のみ画像ダウンロードボタンを表示。?download=1 で自動ダウンロード。
-
-const FILL = '<'.repeat(400);
-
-function drawMap(canvas: HTMLCanvasElement, headWidth: number, geo: any, globe: Stats['globe']) {
-  const W = headWidth;
-  const H = Math.round(W * 0.46);
-  const dpr = devicePixelRatio || 1;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.height = H + 'px';
-  const ctx = canvas.getContext('2d')!;
-  ctx.scale(dpr, dpr);
-  drawMapScene(ctx, W, H, geo, globe);
-}
 
 export function EmbedCard() {
   const { slug = '' } = useParams();
@@ -30,31 +14,19 @@ export function EmbedCard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [drawn, setDrawn] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  // ?style=globe|logbook|minimal|compare: 新デザインの検討用プレビュー（既定は従来カード）
-  const style = searchParams.get('style') ?? '';
-  const previewStyle = ['globe', 'logbook', 'minimal', 'compare'].includes(style) ? style : '';
-  const [previews, setPreviews] = useState<{ label: string; url: string }[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const headRef = useRef<HTMLDivElement>(null);
-  const geoRef = useRef<any>(null);
+  const inputRef = useRef<CardInput | null>(null);
   const autoDownloaded = useRef(false);
   // iframe内ではダウンロードボタンを出さない（埋め込み先の見た目を汚さない）
   const isTopWindow = window.self === window.top;
 
   async function download() {
-    if (!stats || !geoRef.current || downloading) return;
+    if (!inputRef.current || downloading) return;
     setDownloading(true);
     try {
-      const input = { stats, displayName: displayName ?? slug, slug, geo: geoRef.current };
-      const blob =
-        previewStyle === 'globe'
-          ? await renderGlobeCardPng(input)
-          : previewStyle === 'logbook'
-            ? await renderLogbookCardPng(input)
-            : previewStyle === 'minimal'
-              ? await renderMinimalCardPng(input)
-              : await renderCardPng(input);
+      const blob = await renderCardPng(inputRef.current);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -84,48 +56,18 @@ export function EmbedCard() {
       .catch(() => setNotFound(true));
   }, [slug]);
 
-  // データ取得後にcanvasの地図を描画（リサイズ対応）
+  // 地図データが揃った時点でカードを描画する
   useEffect(() => {
     if (!stats || stats.total_flights === 0) return;
-    let geo: any = null;
-    const render = () => {
-      if (geo && canvasRef.current && headRef.current) {
-        drawMap(canvasRef.current, headRef.current.clientWidth, geo, stats.globe);
-      }
-    };
+    let cancelled = false;
     fetch('/data/countries.geojson')
       .then((r) => r.json())
-      .then((g) => {
-        geo = g;
-        geoRef.current = g;
-        render();
-        // プレビュー用にカードを生成して画像として表示する
-        if (previewStyle) {
-          const input = { stats, displayName: displayName ?? slug, slug, geo: g };
-          const wanted: [string, () => Promise<Blob>][] =
-            previewStyle === 'compare'
-              ? [
-                  ['A: 夜の地球 / Globe', () => renderGlobeCardPng(input)],
-                  ['B: 飛行日誌 / Logbook', () => renderLogbookCardPng(input)],
-                  ['C: ミニマル / Minimal', () => renderMinimalCardPng(input)],
-                ]
-              : previewStyle === 'globe'
-                ? [['A: 夜の地球 / Globe', () => renderGlobeCardPng(input)]]
-                : previewStyle === 'logbook'
-                  ? [['B: 飛行日誌 / Logbook', () => renderLogbookCardPng(input)]]
-                  : [['C: ミニマル / Minimal', () => renderMinimalCardPng(input)]];
-          (async () => {
-            const out: { label: string; url: string }[] = [];
-            for (const [label, fn] of wanted) {
-              try {
-                out.push({ label, url: URL.createObjectURL(await fn()) });
-              } catch {
-                /* 1案の失敗で他を巻き込まない */
-              }
-            }
-            setPreviews(out);
-          })();
-        }
+      .then((geo) => {
+        if (cancelled || !canvasRef.current) return;
+        const input: CardInput = { stats, displayName: displayName ?? slug, slug, geo };
+        inputRef.current = input;
+        drawCardOnCanvas(canvasRef.current, input);
+        setDrawn(true);
         // Settingsの「カード画像をダウンロード」からの遷移（?download=1）で自動実行
         if (searchParams.get('download') === '1' && !autoDownloaded.current) {
           autoDownloaded.current = true;
@@ -133,125 +75,28 @@ export function EmbedCard() {
         }
       })
       .catch(() => {});
-    window.addEventListener('resize', render);
-    return () => window.removeEventListener('resize', render);
-  }, [stats]);
+    return () => {
+      cancelled = true;
+    };
+  }, [stats, displayName]);
 
   const css = `
     .embed-root { display: flex; flex-direction: column; align-items: center; padding: 4px; }
+    .embed-root canvas { width: 100%; max-width: 640px; height: auto; display: block; }
     .embed-root .dl-btn { margin-top: 0.9rem; }
-    .embed-root .ecard { width: 100%; max-width: 640px; position: relative; border-radius: 1.1rem; overflow: hidden;
-      background: linear-gradient(155deg, color-mix(in srgb, var(--card) 88%, var(--accent)) 0%, var(--card) 45%);
-      box-shadow: 0 20px 50px rgba(30,60,180,.22), 0 2px 12px rgba(0,0,0,.45); padding: 1.2rem 1.4rem 1rem; }
-    .embed-root .ecard::before { content:''; position:absolute; inset:0 0 auto 0; height:1px;
-      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent2) 55%, transparent), transparent); }
-    .embed-root .ehead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6rem; }
-    .embed-root h1 { font-size:1.35rem; font-weight:800; letter-spacing:.1em; margin:0;
-      background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .embed-root .tagline { font-size:.66rem; font-weight:700; letter-spacing:.18em; color:var(--muted); text-transform:uppercase; }
-    .embed-root canvas { display:block; width:100%; border-radius:.6rem; }
-    .embed-root .eflags { text-align:center; padding:.7rem 0 .9rem; line-height:1.6; }
-    .embed-root .eflags span { display:inline-block; width:1.6rem; height:1.6rem; border-radius:50%; background:var(--row);
-      box-shadow:0 1px 4px rgba(0,0,0,.4); font-size:1.15rem; line-height:1.6rem; text-align:center; overflow:hidden; margin:0 -0.18rem; }
-    .embed-root .edivider { height:1px; border:none; margin:0 0 1rem; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 45%, transparent), transparent); }
-    .embed-root .idrow { display:flex; gap:1.6rem; align-items:flex-start; }
-    .embed-root .bignum { line-height:1; }
-    .embed-root .bignum .n { font-size:3.2rem; font-weight:800; letter-spacing:-.01em;
-      background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .embed-root .bignum .u { display:block; font-size:1.5rem; color:var(--muted); font-weight:500; margin-top:.25rem; }
-    .embed-root .fields { flex:1; display:grid; gap:.45rem; font-size:.9rem; padding-top:.25rem; }
-    .embed-root .fields .k { color:var(--muted); font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.14em; display:block; }
-    .embed-root .estats { display:flex; gap:1rem; justify-content:space-between; margin:1.2rem 0 1rem; flex-wrap:wrap; }
-    .embed-root .estat .k { color:var(--muted); font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.14em; }
-    .embed-root .estat .v { font-size:1.5rem; font-weight:800; }
-    .embed-root .estat .v small { font-weight:500; color:var(--muted); font-size:.95rem; }
-    .embed-root .mrz { border-top:1px solid var(--row); padding-top:.5rem; font-family:'Courier New', ui-monospace, monospace;
-      font-weight:700; font-size:clamp(.58rem,2.3vw,.8rem); letter-spacing:.05em; color:var(--muted); }
-    .embed-root .mrz .line { display:flex; white-space:nowrap; }
-    .embed-root .mrz .fill { flex:1; overflow:hidden; }
-    @media (max-width: 480px) {
-      .embed-root .idrow { gap:1rem; } .embed-root .bignum .n { font-size:2.5rem; }
-      .embed-root .bignum .u { font-size:1.2rem; } .embed-root h1 { font-size:1.05rem; } .embed-root .tagline { display:none; }
-    }
   `;
 
   if (notFound) {
     return <div className="container"><p className="muted">This card doesn't exist or is private.</p></div>;
   }
-  if (!stats) return <div className="embed-root"><style>{css}</style><p className="muted">Loading…</p></div>;
-
-  // デザイン案プレビュー: 生成したPNGをそのまま表示する（描画は全てcanvas側）
-  if (previewStyle) {
-    return (
-      <div className="embed-root">
-        <style>{css}</style>
-        {previews.length ? (
-          <>
-            {previews.map((p) => (
-              <figure key={p.label} style={{ margin: '0 0 1.6rem', width: '100%', maxWidth: 640 }}>
-                {previewStyle === 'compare' && (
-                  <figcaption className="muted" style={{ fontSize: '0.8rem', marginBottom: '0.4rem' }}>
-                    {p.label}
-                  </figcaption>
-                )}
-                <img src={p.url} alt={p.label} style={{ width: '100%', display: 'block' }} />
-              </figure>
-            ))}
-            {isTopWindow && previewStyle !== 'compare' && (
-              <button className="ghost dl-btn" onClick={download} disabled={downloading}>
-                {downloading ? 'Generating…' : 'Download image'}
-              </button>
-            )}
-          </>
-        ) : (
-          <p className="muted">Rendering…</p>
-        )}
-      </div>
-    );
-  }
-
-  const min = stats.flight_time.total_minutes;
-  const d = Math.floor(min / 1440);
-  const h = Math.floor((min % 1440) / 60);
-  const home = stats.airports.ranking[0]?.iata ?? '';
-  const since = shortDate(stats.first_flight_date).replace(/ /g, '');
-  const issued = shortDate(new Date().toISOString()).replace(/ /g, '');
 
   return (
     <div className="embed-root">
       <style>{css}</style>
-      <div className="ecard">
-        <div className="ehead" ref={headRef}>
-          <h1>✈ FLIGHT LOGGER</h1>
-          <div className="tagline">{displayName ?? slug}'s Flight Stats</div>
-        </div>
-        <canvas ref={canvasRef} />
-        <div className="eflags">
-          {stats.countries.including_layovers.visits.map((v) => (
-            <span key={v.country_code} title={v.country_name ?? v.country_code}>{flagOf(v.country_code)}</span>
-          ))}
-        </div>
-        <hr className="edivider" />
-        <div className="idrow">
-          <div className="bignum"><span className="n">{fmt(stats.total_flights)}</span><span className="u">flights</span></div>
-          <div className="fields">
-            <div><span className="k">Home base</span> {home}</div>
-            <div><span className="k">First flight</span> {shortDate(stats.first_flight_date)}</div>
-            <div><span className="k">Issued</span> {shortDate(new Date().toISOString())}</div>
-          </div>
-        </div>
-        <div className="estats">
-          <div className="estat"><div className="k">Distance</div><div className="v">{fmt(stats.total_distance_km)} <small>km</small></div></div>
-          <div className="estat"><div className="k">Flight Time</div><div className="v">{d}<small>d</small> {h}<small>h</small></div></div>
-          <div className="estat"><div className="k">Airports</div><div className="v">{stats.airports.count}</div></div>
-          <div className="estat"><div className="k">Airlines</div><div className="v">{stats.airlines.count}</div></div>
-        </div>
-        <div className="mrz">
-          <div className="line"><span>{`ALLTIME<<<<SINCE${since}<<${stats.total_flights}FLIGHTS`}</span><span className="fill">{FILL}</span><span>{slug.toUpperCase()}</span></div>
-          <div className="line"><span>{`ISSUED${issued}${home}`}</span><span className="fill">{FILL}</span><span>FLIGHT-LOG</span></div>
-        </div>
-      </div>
-      {isTopWindow && (
+      {stats && stats.total_flights === 0 && <p className="muted">No flights yet.</p>}
+      <canvas ref={canvasRef} role="img" aria-label={`${displayName ?? slug}'s flight log`} />
+      {!drawn && <p className="muted">Loading…</p>}
+      {drawn && isTopWindow && (
         <button className="ghost dl-btn" onClick={download} disabled={downloading}>
           {downloading ? 'Generating…' : 'Download image'}
         </button>
