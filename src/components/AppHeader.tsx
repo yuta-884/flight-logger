@@ -13,7 +13,9 @@ export function AppHeader({ showBack = false }: { showBack?: boolean }) {
     <header className="app-header">
       {/* 1段目: ロゴ（左）＋ナビ（右）。狭幅でもこの2つは必ず同じ行に収める */}
       <div className="app-header-top">
-        <h1 className="brand">✈ FLIGHT LOGGER</h1>
+        <h1 className="brand">
+          <Link to="/">✈ FLIGHT LOGGER</Link>
+        </h1>
         <nav className="app-nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'navlink active' : 'navlink')}>
             Log

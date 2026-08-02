@@ -53,6 +53,13 @@ a {
   color: transparent;
 }
 
+/* ロゴはルートへのリンク。色を継承させないと a のリンク色が
+   transparent を上書きし、背景のテキストクリップ（グラデーション）が消える */
+.brand a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .card {
   position: relative;
   border-radius: 1.1rem;

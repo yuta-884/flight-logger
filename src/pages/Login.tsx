@@ -37,7 +37,9 @@ export function Login() {
           <option value="en">English</option>
         </select>
       </div>
-      <h1 className="brand" style={{ width: 'fit-content' }}>✈ FLIGHT LOGGER</h1>
+      <h1 className="brand" style={{ width: 'fit-content' }}>
+        <Link to="/">✈ FLIGHT LOGGER</Link>
+      </h1>
       <p className="muted" style={{ marginTop: '0.4rem' }}>{t('appTagline')}</p>
       <div className="card" style={{ marginTop: '1.5rem', maxWidth: '26rem' }}>
         <h2>{t('signInTitle')}</h2>

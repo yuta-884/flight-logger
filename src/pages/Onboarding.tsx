@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
 import { useI18n } from '../lib/i18n';
@@ -43,7 +43,9 @@ export function Onboarding() {
 
   return (
     <div className="container">
-      <h1 className="brand">✈ FLIGHT LOGGER</h1>
+      <h1 className="brand">
+        <Link to="/">✈ FLIGHT LOGGER</Link>
+      </h1>
       <form className="card" onSubmit={submit} style={{ marginTop: '1.5rem', maxWidth: '30rem' }}>
         <h2>{t('onboardingTitle')}</h2>
         <p className="muted">{t('onboardingDesc')}</p>
